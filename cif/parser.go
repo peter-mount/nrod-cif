@@ -27,26 +27,49 @@ func (c *CIF) Parse( fname string ) error {
 }
 
 func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
-  var schedule *Schedule
+  tx, err := c.db.Begin(true)
+  if err != nil {
+    return err
+  }
+  defer tx.Rollback()
+
+  c.tx = tx
+  c.tiploc = tx.Bucket( []byte("Tiploc") )
+  c.crs = tx.Bucket( []byte("Crs") )
+  c.stanox = tx.Bucket( []byte("Stanox") )
+
+  //var schedule *Schedule
 
   for scanner.Scan() {
     line := scanner.Text()
     switch line[0:2] {
       case "HD":
-        if !c.parseHD( line ) {
-          // Skip this file
-          return nil
+        if err := c.parseHD( line ); err != nil {
+          return err
+        }
+
+        if !c.Header.Update {
+          if err := c.resetDB(); err != nil {
+            return err
+          }
         }
 
       case "TI":
-        c.parseTiplocInsert( line )
+        if err := c.parseTiplocInsert( line ); err != nil {
+          return err
+        }
 
       case "TA":
-        c.parseTiplocAmend( line )
+        if err := c.parseTiplocAmend( line ); err != nil {
+          return err
+        }
 
       case "TD":
-        c.parseTiplocDelete( line )
+        if err := c.parseTiplocDelete( line ); err != nil {
+          return err
+        }
 
+        /*
       case "BS":
         schedule = c.parseBS( line )
         if schedule != nil {
@@ -72,11 +95,14 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
         if schedule != nil {
           c.parseLT( line, schedule )
         }
+        */
 
       case "ZZ":
-        c.cleanup()
+        if err := c.Rebuild( c.tx ); err != nil {
+          return err
+        }
     }
   }
 
-  return nil
+  return tx.Commit()
 }

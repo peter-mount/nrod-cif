@@ -3,113 +3,85 @@
 package cif
 
 import (
+  bolt "github.com/coreos/bbolt"
+  "errors"
   "fmt"
   "sort"
 )
 
 type CIF struct {
+  db         *bolt.DB
+  tx         *bolt.Tx
   // Copy of latest HD record
-  Header    *HD
+  Header     *HD
   // Map of Tiploc's
-  tiploc    map[string]*Tiploc
+  //tiploc      map[string]*Tiploc
+  tiploc     *bolt.Bucket
   // Map of CRS codes to Tiplocs
-  crs       map[string][]*Tiploc
+  crs        *bolt.Bucket
   // Map of Stanox to Tiplocs
-  stanox    map[int][]*Tiploc
+  stanox     *bolt.Bucket
   // Map of Schedules
-  schedules map[string][]*Schedule
+  schedules   map[string][]*Schedule
 }
 
 // Initialise a blank CIF
-func (c *CIF ) Init() *CIF {
+func (c *CIF ) Init( db *bolt.DB ) *CIF {
+  c.db = db
   c.Header = &HD{}
-  c.tiploc = make( map[string]*Tiploc )
-  c.crs = make( map[string][]*Tiploc )
-  c.stanox = make( map[int][]*Tiploc )
   c.schedules = make( map[string][]*Schedule )
   return c
 }
 
+func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
+  bar := b.Get( []byte(k) )
+  if bar != nil {
+    return getInterface( bar, i )
+  }
+  return errors.New( k + " Not found")
+}
+
+func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
+  if bar, err := getBytes( i ); err != nil {
+    return err
+  } else {
+    return b.Put( []byte(k), bar )
+  }
+}
+
+func (c *CIF) resetDB() error {
+  return c.tiploc.ForEach( func( k, v []byte) error {
+    return c.tiploc.Delete( k )
+  })
+}
+
 func (c *CIF) String() string {
   return fmt.Sprintf(
-    "CIF %s Extracted %v Date Range %v - %v\ntiploc %d\ncrs %d\nschedules %d",
+    "CIF %s Extracted %v Date Range %v - %v Update %s",
     c.Header.FileMainframeIdentity,
     c.Header.DateOfExtract.Format( HumanDateTime ),
     c.Header.UserStartDate.Format( HumanDate ),
     c.Header.UserEndDate.Format( HumanDate ),
-    len( c.tiploc ),
-    len( c.crs ),
-    len( c.schedules ) )
+    c.Header.Update )
 }
 
-func (c *CIF) cleanup() {
-  c.cleanupStanox()
-  c.cleanupCRS()
-  c.cleanupSchedules()
-}
+func (c *CIF) Rebuild( tx *bolt.Tx ) error {
 
-func (c *CIF) cleanupStanox() {
-  // Refresh stanox map
-  if c.stanox == nil || len( c.stanox ) > 0 {
-    c.stanox = make( map[int][]*Tiploc )
+  c.tiploc = tx.Bucket( []byte("Tiploc") )
+  c.crs = tx.Bucket( []byte("Crs") )
+  c.stanox = tx.Bucket( []byte("Stanox") )
+
+  if err := c.cleanupStanox(); err != nil {
+    return err
   }
 
-  for _, t := range c.tiploc {
-    if t.Stanox > 0 {
-      c.stanox[ t.Stanox ] = append( c.stanox[ t.Stanox ], t )
-    }
+  if err := c.cleanupCRS(); err != nil {
+    return err
   }
 
-  // Now for each stanox, if 1 entry has a crs then use that for all entries
-  for _, s := range c.stanox {
-    var crs string
-    for _, t := range s {
-      // Don't use X?? or Z?? CRS codes here
-      if t.CRS != "" && !( t.CRS[0:1]=="X" || t.CRS[0:1]=="Z" ) {
-        crs = t.CRS
-      }
-    }
+  //c.cleanupSchedules()
 
-    // Update to the new crs field
-    if crs != "" {
-      for _, t := range s {
-        t.CRS = crs
-      }
-    }
-
-    // Sort the slice by NLC, hopefully making the more accurate entry first
-    if len( s ) > 1 {
-      sort.SliceStable( s, func( i, j int ) bool {
-        return s[i].NLC < s[j].NLC
-      })
-    }
-
-  }
-
-}
-
-func (c *CIF) cleanupCRS() {
-  // Refresh CRS map
-  if c.crs == nil || len( c.crs ) > 0 {
-    // Clear the CRS map
-    c.crs = make( map[string][]*Tiploc )
-  }
-
-  for _, t := range c.tiploc {
-    if t.CRS != "" {
-      c.crs[ t.CRS ] = append( c.crs[ t.CRS ], t )
-    }
-  }
-
-  // Sort each crs slice by NLC, hopefully making the more accurate entry first
-  for _, t := range c.crs {
-    if len( t ) > 1 {
-      sort.SliceStable( t, func( i, j int ) bool {
-        return t[i].NLC < t[j].NLC
-      })
-    }
-  }
-
+  return nil
 }
 
 

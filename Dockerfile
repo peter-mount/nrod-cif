@@ -15,6 +15,7 @@ RUN mkdir -p /dest/etc &&\
 # Ensure we have the libraries - docker will cache these between builds
 RUN go get -v \
       flag \
+      github.com/coreos/bbolt/... \
       github.com/gorilla/mux \
       github.com/peter-mount/golib/rabbitmq \
       github.com/peter-mount/golib/statistics \
@@ -34,7 +35,11 @@ ADD . .
 
 # Now each binary
 RUN go build -v -x \
-      -o /dest/bin/cifimport bin/cifimport
+      -o /dest/bin/cifserver bin/cifserver
+
+# Now each binary
+#RUN go build -v -x \
+#      -o /dest/bin/cifimport bin/cifimport
 
 # Finally build the final runtime container will all required files
 FROM scratch

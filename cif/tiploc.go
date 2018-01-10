@@ -1,7 +1,12 @@
 package cif
 
 import (
+  "encoding/json"
   "fmt"
+  bolt "github.com/coreos/bbolt"
+  "github.com/gorilla/mux"
+  "log"
+  "net/http"
 )
 
 type Tiploc struct {
@@ -25,8 +30,8 @@ func (t *Tiploc) String() string {
     t.NLCDesc )
 }
 
-func (c *CIF) parseTiplocInsert( l string ) {
-  var t *Tiploc = &Tiploc{}
+func (c *CIF) parseTiplocInsert( l string ) error {
+  var t Tiploc = Tiploc{}
   i := 2
   i = parseStringTrim( l, i, 7, &t.Tiploc )
   i += 2
@@ -38,11 +43,11 @@ func (c *CIF) parseTiplocInsert( l string ) {
   i = parseStringTrim( l, i, 3, &t.CRS )
   i = parseStringTitle( l, i, 16, &t.NLCDesc )
 
-  c.tiploc[ t.Tiploc ] = t
+  return c.put( c.tiploc, t.Tiploc, &t )
 }
 
-func (c *CIF) parseTiplocAmend( l string ) {
-  var t *Tiploc = &Tiploc{}
+func (c *CIF) parseTiplocAmend( l string ) error {
+  var t Tiploc = Tiploc{}
   i := 2
   i = parseStringTrim( l, i, 7, &t.Tiploc )
   i += 2
@@ -58,32 +63,65 @@ func (c *CIF) parseTiplocAmend( l string ) {
   i = parseStringTrim( l, i, 7, &newTiploc )
 
   if newTiploc == "" {
-    c.tiploc[ t.Tiploc ] = t
+    return c.put( c.tiploc, t.Tiploc, &t )
   } else {
-    delete( c.tiploc, t.Tiploc )
-    c.tiploc[ newTiploc ] = t
+    // Remove the old entry
+    if err := c.tiploc.Delete( []byte( t.Tiploc ) ); err != nil {
+      return err
+    }
+
+    // Update and store as the new entry
+    t.Tiploc = newTiploc
+    return c.put( c.tiploc, newTiploc, &t )
   }
 
 }
 
-func (c *CIF) parseTiplocDelete( l string ) {
-  var t *Tiploc = &Tiploc{}
+func (c *CIF) parseTiplocDelete( l string ) error {
+  var t Tiploc = Tiploc{}
   i := 2
   i = parseStringTrim( l, i, 7, &t.Tiploc )
-  delete( c.tiploc, t.Tiploc )
+  return c.tiploc.Delete( []byte( t.Tiploc ) )
 }
 
-func (c *CIF) GetTiploc( t string ) ( *Tiploc, bool ) {
-  r, e := c.tiploc[ t ]
-  return r, e
+func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
+  var tiploc *Tiploc = &Tiploc{}
+
+  if err := c.get( tx.Bucket( []byte("Tiploc") ), t, tiploc ); err != nil {
+    log.Println( err )
+    return nil, false
+  }
+
+  return tiploc, true
 }
 
-func (c *CIF) GetCRS( t string ) ( []*Tiploc, bool ) {
-  r, e := c.crs[ t ]
-  return r, e
-}
+func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
+  var params = mux.Vars( r )
 
-func (c *CIF) GetStanox( s int ) ( []*Tiploc, bool ) {
-  r, e := c.stanox[ s ]
-  return r, e
+  tpl := params[ "id" ]
+  log.Println( "Get Tiploc", tpl )
+
+  tx, err := c.db.Begin(true)
+  if err != nil {
+    log.Println( err )
+    log.Println( "Get Tiploc", tpl, err )
+    w.WriteHeader( 500 )
+    return
+  }
+  defer tx.Rollback()
+
+  if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
+
+    if err := tx.Commit(); err != nil {
+      log.Println( "Get Tiploc", tpl, err )
+      w.WriteHeader( 500 )
+    } else {
+      log.Println( "Get Tiploc", tpl, tiploc )
+      w.WriteHeader( 200 )
+      json.NewEncoder( w ).Encode( tiploc )
+    }
+  } else {
+    log.Println( "Get Tiploc", tpl, 404 )
+    w.WriteHeader( 404 )
+  }
 }
