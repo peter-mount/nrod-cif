@@ -111,28 +111,20 @@ func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
     return
   }
 
-  tx, err := c.db.Begin(true)
-  if err != nil {
-    statistics.Incr( "stanox.500" )
-    log.Println( "Get Stanox", crs, err )
-    w.WriteHeader( 500 )
-    return
-  }
-  defer tx.Rollback()
-
-  if ary, exists := c.GetStanox( tx, crs ); exists {
-
-    if err := tx.Commit(); err != nil {
-      statistics.Incr( "stanox.500" )
-      log.Println( "Get Stanox", crs, err )
-      w.WriteHeader( 500 )
-    } else {
+  if err := c.db.View( func( tx *bolt.Tx ) error {
+    if ary, exists := c.GetStanox( tx, crs ); exists {
       statistics.Incr( "stanox.200" )
       w.WriteHeader( 200 )
       json.NewEncoder( w ).Encode( ary )
+    } else {
+      statistics.Incr( "stanox.404" )
+      w.WriteHeader( 404 )
     }
-  } else {
-    statistics.Incr( "stanox.404" )
-    w.WriteHeader( 404 )
+    
+    return nil
+  }); err != nil {
+    statistics.Incr( "stanox.500" )
+    log.Println( "Get Stanox", crs, err )
+    w.WriteHeader( 500 )
   }
 }

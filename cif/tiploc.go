@@ -100,28 +100,20 @@ func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
 
   tpl := params[ "id" ]
 
-  tx, err := c.db.Begin(true)
-  if err != nil {
-    statistics.Incr( "tiploc.500" )
-    log.Println( "Get Tiploc", tpl, err )
-    w.WriteHeader( 500 )
-    return
-  }
-  defer tx.Rollback()
-
-  if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
-
-    if err := tx.Commit(); err != nil {
-      statistics.Incr( "tiploc.500" )
-      log.Println( "Get Tiploc", tpl, err )
-      w.WriteHeader( 500 )
-    } else {
+  if err := c.db.View( func( tx *bolt.Tx ) error {
+    if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
       w.WriteHeader( 200 )
       json.NewEncoder( w ).Encode( tiploc )
+    } else {
+      statistics.Incr( "tiploc.404" )
+      w.WriteHeader( 404 )
     }
-  } else {
-    statistics.Incr( "tiploc.404" )
-    w.WriteHeader( 404 )
+
+    return nil
+  } ); err != nil {
+    statistics.Incr( "tiploc.500" )
+    log.Println( "Get Tiploc", tpl, err )
+    w.WriteHeader( 500 )
   }
 }

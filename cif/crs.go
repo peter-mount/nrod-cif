@@ -85,28 +85,20 @@ func (c *CIF) CRSHandler( w http.ResponseWriter, r *http.Request ) {
 
   crs := params[ "id" ]
 
-  tx, err := c.db.Begin(true)
-  if err != nil {
-    log.Println( "Get CRS", crs, err )
-    statistics.Incr( "crs.500" )
-    w.WriteHeader( 500 )
-    return
-  }
-  defer tx.Rollback()
-
-  if ary, exists := c.GetCRS( tx, crs ); exists {
-
-    if err := tx.Commit(); err != nil {
-      log.Println( "Get CRS", crs, err )
-      statistics.Incr( "crs.500" )
-      w.WriteHeader( 500 )
-    } else {
+  if err := c.db.View( func( tx *bolt.Tx ) error {
+    if ary, exists := c.GetCRS( tx, crs ); exists {
       statistics.Incr( "crs.200" )
       w.WriteHeader( 200 )
       json.NewEncoder( w ).Encode( ary )
+    } else {
+      statistics.Incr( "crs.404" )
+      w.WriteHeader( 404 )
     }
-  } else {
-    statistics.Incr( "crs.404" )
-    w.WriteHeader( 404 )
+    
+    return nil
+  }); err != nil {
+    log.Println( "Get CRS", crs, err )
+    statistics.Incr( "crs.500" )
+    w.WriteHeader( 500 )
   }
 }
