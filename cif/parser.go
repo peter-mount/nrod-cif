@@ -37,8 +37,9 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
   c.tiploc = tx.Bucket( []byte("Tiploc") )
   c.crs = tx.Bucket( []byte("Crs") )
   c.stanox = tx.Bucket( []byte("Stanox") )
+  c.schedule = tx.Bucket( []byte("Schedule") )
 
-  //var schedule *Schedule
+  var schedule *Schedule
 
   for scanner.Scan() {
     line := scanner.Text()
@@ -69,35 +70,39 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
           return err
         }
 
-        /*
       case "BS":
-        schedule = c.parseBS( line )
-        if schedule != nil {
-          c.addSchedule( schedule )
+        // Persist the last schedule as its now complete
+        if c.curSchedule != nil {
+          if err := c.addSchedule(); err != nil {
+            return err
+          }
         }
+
+        c.curSchedule = &Schedule{}
+        c.parseBS( line )
 
       case "BX":
-        if schedule != nil {
-          c.parseBX( line, schedule )
-        }
+        c.parseBX( line )
 
+        /*
       case "LO":
-        if schedule != nil {
-          c.parseLO( line, schedule )
-        }
+        c.parseLO( line )
 
       case "LI":
-        if schedule != nil {
-          c.parseLI( line, schedule )
-        }
+        c.parseLI( line )
 
       case "LT":
-        if schedule != nil {
-          c.parseLT( line, schedule )
-        }
+        c.parseLT( line )
         */
 
       case "ZZ":
+        // Save last schedule
+        if schedule != nil {
+          if err := c.addSchedule(); err != nil {
+            return err
+          }
+        }
+
         if err := c.Rebuild( c.tx ); err != nil {
           return err
         }

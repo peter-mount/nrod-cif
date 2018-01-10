@@ -12,9 +12,7 @@ import (
 
 func OpenCIF( dbFile string ) ( *CIF, error ) {
 
-  var c *CIF = &CIF{}
-    c.Header = &HD{}
-    c.schedules = make( map[string][]*Schedule )
+  var c *CIF = &CIF{ Header: &HD{} }
 
   if boltdb, err := bolt.Open( dbFile, 0666, &bolt.Options{
     Timeout: 5 * time.Second,
@@ -54,7 +52,7 @@ func (c *CIF) initDB() error {
 
   var rebuildRequired bool
 
-  for _, n := range []string { "Tiploc", "Crs", "Stanox" } {
+  for _, n := range []string { "Tiploc", "Crs", "Stanox", "Schedule" } {
     var nb []byte = []byte(n)
     if bucket := tx.Bucket( nb ); bucket == nil {
       log.Println( "Creating bucket", n )

@@ -2,6 +2,8 @@ package cif
 
 import (
   "fmt"
+  "log"
+  "sort"
   "strings"
   "time"
 )
@@ -76,28 +78,27 @@ func (s *Schedule) String() string {
     s.STPIndicator )
 }
 
-func (c *CIF ) parseBS( l string ) *Schedule {
+func (c *CIF ) parseBS( l string ) {
   tx := l[2:3]
 
   switch tx {
     // New entry
     case "N":
-      return c.parseBSNew( l )
+      c.parseBSNew( l )
 
     // Revise - treat as new as we ensure only a single instance
     case "R":
-      return c.parseBSNew( l )
+      c.parseBSNew( l )
 
     // Delete
     case "D":
-      return c.parseBSDelete( l )
+      c.parseBSDelete( l )
   }
 
-  return nil
 }
 
-func (c *CIF ) parseBSNew( l string ) *Schedule {
-  var s *Schedule = &Schedule{}
+func (c *CIF ) parseBSNew( l string ) {
+  s := c.curSchedule
 
   // Skip BS
   i := 2
@@ -126,11 +127,11 @@ func (c *CIF ) parseBSNew( l string ) *Schedule {
   i = parseString( l, i, 4, &s.ServiceBranding )
   i++ // Spare
   i = parseString( l, i, 1, &s.STPIndicator )
-
-  return s
 }
 
-func (c *CIF ) parseBX( l string, s *Schedule ) {
+func (c *CIF ) parseBX( l string ) {
+  s := c.curSchedule
+
   i := 2
   i+=4 // traction class
   i = parseInt( l, i, 5, &s.UICCode )
@@ -154,7 +155,9 @@ func (c *CIF ) parseBSDelete( l string ) *Schedule {
   return nil
 }
 
-func (c *CIF) parseLO( l string, s *Schedule ) {
+func (c *CIF) parseLO( l string ) {
+  s := c.curSchedule
+
   var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
@@ -179,7 +182,9 @@ func (c *CIF) parseLO( l string, s *Schedule ) {
   s.appendLocation( loc )
 }
 
-func (c *CIF) parseLI( l string, s *Schedule ) {
+func (c *CIF) parseLI( l string ) {
+  s := c.curSchedule
+
   var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
@@ -207,7 +212,9 @@ func (c *CIF) parseLI( l string, s *Schedule ) {
   s.appendLocation( loc )
 }
 
-func (c *CIF) parseLT( l string, s *Schedule ) {
+func (c *CIF) parseLT( l string ) {
+  s := c.curSchedule
+
   var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
@@ -240,3 +247,71 @@ func newLocation() *Location {
 func (s *Schedule) appendLocation(l *Location) {
   s.Locations = append( s.Locations, l )
 }
+
+func (c *CIF) addSchedule() error {
+  s := c.curSchedule
+
+  var ar []*Schedule
+
+  c.get( c.schedule, s.TrainUID, &ar )
+
+  // Check to see if we have a comparable entry. If so then replace it
+  for i, e := range ar {
+    if s.Equals( e ) {
+      ar[ i ] = s
+      return c.put( c.schedule, s.TrainUID, ar )
+    }
+  }
+
+  // It's new for this uid so append & persist
+  ar = append( ar, s )
+  return c.put( c.schedule, s.TrainUID, ar )
+}
+
+func (c *CIF) deleteSchedule( s *Schedule ) error {
+  var ar []*Schedule
+
+  c.get( c.schedule, s.TrainUID, &ar )
+
+  // Form a new slice without the schedule
+  var n []*Schedule
+  for _, e := range ar {
+    if !s.Equals( e ) {
+      n = append( n, e )
+    }
+  }
+
+  // Persist or delete if the new slice is empty
+  if len( n ) > 0 {
+    return c.put( c.schedule, s.TrainUID, ar )
+  } else {
+    return c.schedule.Delete( []byte( s.TrainUID ) )
+  }
+
+  return nil
+}
+
+func (c *CIF) cleanupSchedules() error {
+  log.Println( "Rebuilding Schedule bucket")
+
+  return c.schedule.ForEach( func( k, v []byte ) error {
+    var ar []*Schedule
+    if err := getInterface( v, ar ); err != nil {
+      return err
+    }
+
+    sort.SliceStable( ar, func( i, j int ) bool {
+      return ar[i].RunsFrom.Before( ar[j].RunsFrom ) && ar[i].STPIndicator < ar[i].STPIndicator
+    })
+
+    return c.put( c.schedule, ar[0].TrainUID, ar )
+  } )
+
+}
+
+/*
+// Returns all schedules for a train uid
+func (c *CIF) GetSchedules( uid string ) []*Schedule {
+  return c.schedules[ uid ]
+}
+*/

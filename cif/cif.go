@@ -6,19 +6,18 @@ import (
   bolt "github.com/coreos/bbolt"
   "errors"
   "fmt"
-  "sort"
 )
 
 type CIF struct {
-  db         *bolt.DB
+  db           *bolt.DB
   // === Entries used during import only
-  tx         *bolt.Tx
-  Header     *HD
-  tiploc     *bolt.Bucket
-  crs        *bolt.Bucket
-  stanox     *bolt.Bucket
-  // Map of Schedules
-  schedules   map[string][]*Schedule
+  tx           *bolt.Tx
+  Header       *HD
+  curSchedule  *Schedule
+  tiploc       *bolt.Bucket
+  crs          *bolt.Bucket
+  stanox       *bolt.Bucket
+  schedule     *bolt.Bucket
 }
 
 func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
@@ -38,7 +37,13 @@ func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
 }
 
 func (c *CIF) resetDB() error {
-  return c.tiploc.ForEach( func( k, v []byte) error {
+  if err := c.tiploc.ForEach( func( k, v []byte) error {
+    return c.tiploc.Delete( k )
+  }); err != nil {
+    return err
+  }
+
+  return c.schedule.ForEach( func( k, v []byte) error {
     return c.tiploc.Delete( k )
   })
 }
@@ -67,54 +72,9 @@ func (c *CIF) Rebuild( tx *bolt.Tx ) error {
     return err
   }
 
-  //c.cleanupSchedules()
+  if err := c.cleanupSchedules(); err != nil {
+    return err
+  }
 
   return nil
-}
-
-
-func (c *CIF) cleanupSchedules() {
-  // Sort each schedule slice in start date & STP Indicator order, C, N, O & P
-  for _, s := range c.schedules {
-    if len( s ) > 1 {
-      sort.SliceStable( s, func( i, j int ) bool {
-        return s[i].RunsFrom.Before( s[j].RunsFrom ) && s[i].STPIndicator < s[i].STPIndicator
-      })
-    }
-  }
-}
-
-// Returns all schedules for a train uid
-func (c *CIF) GetSchedules( uid string ) []*Schedule {
-  return c.schedules[ uid ]
-}
-
-func (c *CIF) addSchedule( s *Schedule ) {
-  if ary, exists := c.schedules[ s.TrainUID ]; exists {
-    // Check to see if we have a comparable entry. If so then replace it
-    for i, e := range ary {
-      if s.Equals( e ) {
-        ary[ i ] = s
-        return
-      }
-    }
-  }
-
-  c.schedules[ s.TrainUID ] = append( c.schedules[ s.TrainUID ], s )
-}
-
-func (c *CIF) deleteSchedule( s *Schedule ) {
-  if ary, exists := c.schedules[ s.TrainUID ]; exists {
-    var n []*Schedule
-    for _, e := range ary {
-      if !s.Equals( e ) {
-        n = append( n, e )
-      }
-    }
-    if len( n ) > 0 {
-      c.schedules[ s.TrainUID ] = n
-    } else {
-      delete( c.schedules, s.TrainUID )
-    }
-  }
 }
