@@ -45,12 +45,12 @@ type Location struct {
   // Tiploc of Location sans Suffix
   Tiploc      string
   // Public times in seconds of day
-  Pta         int
-  Ptd         int
+  Pta         PublicTime
+  Ptd         PublicTime
   // Working times in seconds of day
-  Wta         int
-  Wtd         int
-  Wtp         int
+  Wta         WorkingTime
+  Wtd         WorkingTime
+  Wtp         WorkingTime
   // Platform
   Platform    string
   // Activity up to 6 codes
@@ -148,7 +148,7 @@ func (c *CIF ) parseBSDelete( l string ) *Schedule {
 }
 
 func (c *CIF) parseLO( l string, s *Schedule ) {
-  var loc *Location = &Location{}
+  var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 
@@ -169,11 +169,11 @@ func (c *CIF) parseLO( l string, s *Schedule ) {
 
   i = parseStringTrim( l, i, 2, &loc.PerfAllow )
 
-  s.Locations = append( s.Locations, loc )
+  s.appendLocation( loc )
 }
 
 func (c *CIF) parseLI( l string, s *Schedule ) {
-  var loc *Location = &Location{}
+  var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 
@@ -184,6 +184,7 @@ func (c *CIF) parseLI( l string, s *Schedule ) {
   i = parseHHMMS( l, i, &loc.Wta )
   i = parseHHMMS( l, i, &loc.Wtd )
   i = parseHHMMS( l, i, &loc.Wtp )
+
   i = parseHHMM( l, i, &loc.Pta )
   i = parseHHMM( l, i, &loc.Ptd )
 
@@ -196,11 +197,11 @@ func (c *CIF) parseLI( l string, s *Schedule ) {
   i = parseStringTrim( l, i, 2, &loc.PathAllow )
   i = parseStringTrim( l, i, 2, &loc.PerfAllow )
 
-  s.Locations = append( s.Locations, loc )
+  s.appendLocation( loc )
 }
 
 func (c *CIF) parseLT( l string, s *Schedule ) {
-  var loc *Location = &Location{}
+  var loc *Location = newLocation()
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 
@@ -209,11 +210,30 @@ func (c *CIF) parseLT( l string, s *Schedule ) {
   loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
 
   i = parseHHMMS( l, i, &loc.Wta )
+
   i = parseHHMM( l, i, &loc.Pta )
 
   i = parseStringTrim( l, i, 3, &loc.Platform )
   i = parseStringTrim( l, i, 3, &loc.Path )
   i = parseActivity( l, i, &loc.Activity )
 
-  s.Locations = append( s.Locations, loc )
+  s.appendLocation( loc )
+}
+
+func newLocation() *Location {
+  var loc *Location = &Location{}
+  loc.Wta.t = -1
+  loc.Wtd.t = -1
+  loc.Wtp.t = -1
+  return loc
+}
+
+func (s *Schedule) appendLocation(l *Location) {
+  if l.Pta.t == 0 {
+    l.Pta.t = -1
+  }
+  if l.Ptd.t == 0 {
+    l.Ptd.t = -1
+  }
+  s.Locations = append( s.Locations, l )
 }
