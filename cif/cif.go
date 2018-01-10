@@ -11,26 +11,14 @@ import (
 
 type CIF struct {
   db         *bolt.DB
+  // === Entries used during import only
   tx         *bolt.Tx
-  // Copy of latest HD record
   Header     *HD
-  // Map of Tiploc's
-  //tiploc      map[string]*Tiploc
   tiploc     *bolt.Bucket
-  // Map of CRS codes to Tiplocs
   crs        *bolt.Bucket
-  // Map of Stanox to Tiplocs
   stanox     *bolt.Bucket
   // Map of Schedules
   schedules   map[string][]*Schedule
-}
-
-// Initialise a blank CIF
-func (c *CIF ) Init( db *bolt.DB ) *CIF {
-  c.db = db
-  c.Header = &HD{}
-  c.schedules = make( map[string][]*Schedule )
-  return c
 }
 
 func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {

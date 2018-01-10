@@ -1,9 +1,15 @@
 #!/bin/sh
 
 clear
-docker build -t test . &&\
+docker build -t test . || exit 1
+
+#rm -f /home/peter/tmp/cif.db
+
 docker run -it --rm \
-  --name test \
-  -v /home/peter/nrod-data:/data:ro \
+  --name cifserver \
+  -v /home/peter/tmp/:/database \
+  -p 8081:8081 \
   test \
-  cifimport /data/toc-full.CIF
+  cifserver \
+  -p 8081 \
+  -d /database/cif.db

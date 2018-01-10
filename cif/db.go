@@ -1,5 +1,5 @@
 // CIF Rest server
-package main
+package cif
 
 import (
   bolt "github.com/coreos/bbolt"
@@ -10,15 +10,18 @@ import (
   "time"
 )
 
-func (c *CifDB) OpenDB( dbFile string ) error {
+func OpenCIF( dbFile string ) ( *CIF, error ) {
+
+  var c *CIF = &CIF{}
+    c.Header = &HD{}
+    c.schedules = make( map[string][]*Schedule )
 
   if boltdb, err := bolt.Open( dbFile, 0666, &bolt.Options{
     Timeout: 5 * time.Second,
     } ); err != nil {
-      return err
+      return nil, err
   } else {
-    db.db = boltdb
-    db.cif.Init( db.db )
+    c.db = boltdb
   }
 
   // Listen to signals & close the db before exiting
@@ -28,22 +31,22 @@ func (c *CifDB) OpenDB( dbFile string ) error {
   go func() {
     sig := <-sigs
     log.Println( "Signal", sig )
-    db.db.Close()
+    c.db.Close()
     log.Println( "Database closed" )
     os.Exit( 0 )
   }()
 
   // Now ensure the DB is initialised with the required buckets
-  if err := initDB(); err != nil {
-    return err
+  if err := c.initDB(); err != nil {
+    return nil, err
   }
 
-  return nil
+  return c, nil
 }
 
 // Ensures we have the appropriate buckets
-func initDB() error {
-  tx, err := db.db.Begin(true)
+func (c *CIF) initDB() error {
+  tx, err := c.db.Begin(true)
   if err != nil {
     return err
   }
@@ -63,7 +66,7 @@ func initDB() error {
   }
 
   if rebuildRequired {
-    if err := db.cif.Rebuild( tx ); err != nil {
+    if err := c.Rebuild( tx ); err != nil {
       return err
     }
   }
