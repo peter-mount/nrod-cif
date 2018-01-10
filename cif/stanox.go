@@ -4,6 +4,7 @@ import (
   "encoding/json"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
+  "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
   "sort"
@@ -86,7 +87,6 @@ func (c *CIF) GetStanox( tx *bolt.Tx, stanox int ) ( []*Tiploc, bool ) {
     var ar []string
 
     if err := c.get( tx.Bucket( []byte("Stanox") ), strconv.FormatInt( int64( stanox ), 10 ), &ar ); err != nil {
-      log.Println( err )
       return nil, false
     }
 
@@ -106,17 +106,14 @@ func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
   crs, err := strconv.Atoi( params[ "id" ] )
   if err != nil {
     // Return 404 not 500 as the url is invalid
-    log.Println( err )
-    log.Println( "Get Stanox", crs, err )
+    statistics.Incr( "stanox.404" )
     w.WriteHeader( 404 )
     return
   }
 
-  log.Println( "Get Stanox", crs )
-
   tx, err := c.db.Begin(true)
   if err != nil {
-    log.Println( err )
+    statistics.Incr( "stanox.500" )
     log.Println( "Get Stanox", crs, err )
     w.WriteHeader( 500 )
     return
@@ -126,15 +123,16 @@ func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
   if ary, exists := c.GetStanox( tx, crs ); exists {
 
     if err := tx.Commit(); err != nil {
+      statistics.Incr( "stanox.500" )
       log.Println( "Get Stanox", crs, err )
       w.WriteHeader( 500 )
     } else {
-      log.Println( "Get Stanox", crs, ary )
+      statistics.Incr( "stanox.200" )
       w.WriteHeader( 200 )
       json.NewEncoder( w ).Encode( ary )
     }
   } else {
-    log.Println( "Get Stanox", crs, 404 )
+    statistics.Incr( "stanox.404" )
     w.WriteHeader( 404 )
   }
 }

@@ -3,6 +3,7 @@ package main
 
 import (
   bolt "github.com/coreos/bbolt"
+  "github.com/peter-mount/golib/statistics"
   "cif"
   "flag"
   "log"
@@ -23,6 +24,9 @@ func main() {
   dbFile := flag.String( "d", "/database.db", "The database file" )
   port := flag.Int( "p", 8080, "Port to use" )
   flag.Parse()
+
+  stats := statistics.Statistics{ Log: true }
+  stats.Configure()
 
   db.server.Port = *port
   log.Println( "secret", *writeSecret )

@@ -5,6 +5,7 @@ import (
   "fmt"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
+  "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
 )
@@ -88,7 +89,6 @@ func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
   var tiploc *Tiploc = &Tiploc{}
 
   if err := c.get( tx.Bucket( []byte("Tiploc") ), t, tiploc ); err != nil {
-    log.Println( err )
     return nil, false
   }
 
@@ -99,11 +99,10 @@ func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
   var params = mux.Vars( r )
 
   tpl := params[ "id" ]
-  log.Println( "Get Tiploc", tpl )
 
   tx, err := c.db.Begin(true)
   if err != nil {
-    log.Println( err )
+    statistics.Incr( "tiploc.500" )
     log.Println( "Get Tiploc", tpl, err )
     w.WriteHeader( 500 )
     return
@@ -113,15 +112,16 @@ func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
   if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
 
     if err := tx.Commit(); err != nil {
+      statistics.Incr( "tiploc.500" )
       log.Println( "Get Tiploc", tpl, err )
       w.WriteHeader( 500 )
     } else {
-      log.Println( "Get Tiploc", tpl, tiploc )
+      statistics.Incr( "tiploc.200" )
       w.WriteHeader( 200 )
       json.NewEncoder( w ).Encode( tiploc )
     }
   } else {
-    log.Println( "Get Tiploc", tpl, 404 )
+    statistics.Incr( "tiploc.404" )
     w.WriteHeader( 404 )
   }
 }
