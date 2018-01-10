@@ -36,9 +36,16 @@ type Schedule struct {
 
 }
 
+func (s *Schedule) Equals( o *Schedule ) bool {
+  if o == nil {
+    return false
+  }
+  return s.TrainUID == o.TrainUID && s.RunsFrom == o.RunsFrom && s.STPIndicator == o.STPIndicator
+}
+
 func (s *Schedule) String() string {
   return fmt.Sprintf(
-    "Schedule %s %s %s",
+    "Schedule[uid=%s, from=%s, stp=%s]",
     s.TrainUID,
     s.RunsFrom.Format( Date ),
     s.STPIndicator )
@@ -54,7 +61,7 @@ func (c *CIF ) parseBS( l string ) *Schedule {
 
     // Revise - treat as new as we ensure only a single instance
     case "R":
-      return c.parseBSRevise( l )
+      return c.parseBSNew( l )
 
     // Delete
     case "D":
@@ -67,8 +74,9 @@ func (c *CIF ) parseBS( l string ) *Schedule {
 func (c *CIF ) parseBSNew( l string ) *Schedule {
   var s *Schedule = &Schedule{}
 
-  // Skip BSN
-  i := 3
+  // Skip BS
+  i := 2
+  i++ // TX
   i = parseString( l, i, 6, &s.TrainUID )
   i = parseYYMMDD( l, i, &s.RunsFrom )
   i = parseYYMMDD( l, i, &s.RunsTo )
@@ -77,8 +85,9 @@ func (c *CIF ) parseBSNew( l string ) *Schedule {
   i = parseString( l, i, 1, &s.Status )
   i = parseString( l, i, 2, &s.Category )
   i = parseString( l, i, 4, &s.TrainIdentity )
-  i = parseInt( l, i, 1, &s.Headcode )
+  i = parseInt( l, i, 4, &s.Headcode )
   i++ // Course Indicator
+  i = parseInt( l, i, 8, &s.ServiceCode )
   i = parseString( l, i, 1, &s.PortionId )
   i = parseString( l, i, 3, &s.PowerType )
   i = parseString( l, i, 4, &s.TimingLoad )
@@ -96,23 +105,18 @@ func (c *CIF ) parseBSNew( l string ) *Schedule {
   return s
 }
 
-func (c *CIF ) parseBSRevise( l string ) *Schedule {
-  s := c.parseBSNew( l )
-  // todo delete existing entry?
-  return s
+func (c *CIF ) parseBX( l string, s *Schedule ) {
+  i := 2
+  i+=4 // traction class
+  i = parseInt( l, i, 5, &s.UICCode )
+  i = parseString( l, i, 2, &s.ATOCCode )
+
+  var atc string
+  i = parseString( l, i, 1, &atc )
+  s.ApplicableTimetable = atc == "Y"
 }
 
 func (c *CIF ) parseBSDelete( l string ) *Schedule {
   log.Fatal( "Delete not yet implemented" )
   return nil
-}
-
-// Returns all schedules for a train uid
-func (c *CIF) GetSchedules( uid string ) []*Schedule {
-  return c.schedules[ uid ]
-}
-
-func (c *CIF) addSchedule( s *Schedule ) {
-  //ary := c.schedules[ s.TrainUID ]
-
 }

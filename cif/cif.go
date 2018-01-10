@@ -45,6 +45,7 @@ func (c *CIF) String() string {
 func (c *CIF) cleanup() {
   c.cleanupStanox()
   c.cleanupCRS()
+  c.cleanupSchedules()
 }
 
 func (c *CIF) cleanupStanox() {
@@ -77,9 +78,12 @@ func (c *CIF) cleanupStanox() {
     }
 
     // Sort the slice by NLC, hopefully making the more accurate entry first
-    sort.SliceStable( t, func( i, j int ) bool {
-      return t[i].NLC < t[j].NLC
-    })
+    if len( s ) > 1 {
+      sort.SliceStable( s, func( i, j int ) bool {
+        return s[i].NLC < s[j].NLC
+      })
+    }
+
   }
 
 }
@@ -99,9 +103,42 @@ func (c *CIF) cleanupCRS() {
 
   // Sort each crs slice by NLC, hopefully making the more accurate entry first
   for _, t := range c.crs {
-    sort.SliceStable( t, func( i, j int ) bool {
-      return t[i].NLC < t[j].NLC
-    })
+    if len( t ) > 1 {
+      sort.SliceStable( t, func( i, j int ) bool {
+        return t[i].NLC < t[j].NLC
+      })
+    }
   }
 
+}
+
+
+func (c *CIF) cleanupSchedules() {
+  // Sort each schedule slice in start date & STP Indicator order, C, N, O & P
+  for _, s := range c.schedules {
+    if len( s ) > 1 {
+      sort.SliceStable( s, func( i, j int ) bool {
+        return s[i].RunsFrom.Before( s[j].RunsFrom ) && s[i].STPIndicator < s[i].STPIndicator
+      })
+    }
+  }
+}
+
+// Returns all schedules for a train uid
+func (c *CIF) GetSchedules( uid string ) []*Schedule {
+  return c.schedules[ uid ]
+}
+
+func (c *CIF) addSchedule( s *Schedule ) {
+  if ary, exists := c.schedules[ s.TrainUID ]; exists {
+    // Check to see if we have a comparable entry. If so then replace it
+    for i, e := range ary {
+      if s.Equals( e ) {
+        ary[ i ] = s
+        return
+      }
+    }
+  }
+
+  c.schedules[ s.TrainUID ] = append( c.schedules[ s.TrainUID ], s )
 }

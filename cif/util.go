@@ -1,7 +1,6 @@
 package cif
 
 import (
-  //"log"
   "strconv"
   "strings"
   "time"

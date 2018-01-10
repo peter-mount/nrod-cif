@@ -27,7 +27,7 @@ func (c *CIF) Parse( fname string ) error {
 }
 
 func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
-  //var schedule *Schedule
+  var schedule *Schedule
 
   for scanner.Scan() {
     line := scanner.Text()
@@ -48,8 +48,15 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
         c.parseTiplocDelete( line )
 
       case "BS":
-        //schedule =
-        c.parseBS( line )
+        schedule = c.parseBS( line )
+        if schedule != nil {
+          c.addSchedule( schedule )
+        }
+
+      case "BX":
+        if schedule != nil {
+          c.parseBX( line, schedule )
+        }
 
       case "ZZ":
         c.cleanup()

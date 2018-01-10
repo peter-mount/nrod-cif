@@ -84,6 +84,6 @@ func (c *CIF) GetCRS( t string ) ( []*Tiploc, bool ) {
 }
 
 func (c *CIF) GetStanox( s int ) ( []*Tiploc, bool ) {
-  r, e : c.stanox[ s ]
+  r, e := c.stanox[ s ]
   return r, e
 }
