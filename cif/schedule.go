@@ -3,6 +3,7 @@ package cif
 import (
   "log"
   "fmt"
+  "strings"
   "time"
 )
 
@@ -33,9 +34,34 @@ type Schedule struct {
   UICCode                   int
   ATOCCode                  string
   ApplicableTimetable       bool
-
+  Locations              []*Location
 }
 
+type Location struct {
+  // LO,
+  Id          string
+  // Location including Suffix (for circular routes)
+  Location    string
+  // Tiploc of Location sans Suffix
+  Tiploc      string
+  // Public times in seconds of day
+  Pta         int
+  Ptd         int
+  // Working times in seconds of day
+  Wta         int
+  Wtd         int
+  Wtp         int
+  // Platform
+  Platform    string
+  // Activity up to 6 codes
+  Activity  []string
+  // Misc
+  Line        string
+  Path        string
+  EngAllow    string
+  PathAllow   string
+  PerfAllow   string
+}
 func (s *Schedule) Equals( o *Schedule ) bool {
   if o == nil {
     return false
@@ -119,4 +145,75 @@ func (c *CIF ) parseBX( l string, s *Schedule ) {
 func (c *CIF ) parseBSDelete( l string ) *Schedule {
   log.Fatal( "Delete not yet implemented" )
   return nil
+}
+
+func (c *CIF) parseLO( l string, s *Schedule ) {
+  var loc *Location = &Location{}
+  i := 0
+  i = parseString( l, i, 2, &loc.Id )
+
+  // Location is Tiploc + Suffix
+  i = parseString( l, i, 8, &loc.Location )
+  loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
+
+  i = parseHHMMS( l, i, &loc.Wtd )
+  i = parseHHMM( l, i, &loc.Ptd )
+
+  i = parseStringTrim( l, i, 3, &loc.Platform )
+  i = parseStringTrim( l, i, 3, &loc.Line )
+
+  i = parseStringTrim( l, i, 2, &loc.EngAllow )
+  i = parseStringTrim( l, i, 2, &loc.PathAllow )
+
+  i = parseActivity( l, i, &loc.Activity)
+
+  i = parseStringTrim( l, i, 2, &loc.PerfAllow )
+
+  s.Locations = append( s.Locations, loc )
+}
+
+func (c *CIF) parseLI( l string, s *Schedule ) {
+  var loc *Location = &Location{}
+  i := 0
+  i = parseString( l, i, 2, &loc.Id )
+
+  // Location is Tiploc + Suffix
+  i = parseString( l, i, 8, &loc.Location )
+  loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
+
+  i = parseHHMMS( l, i, &loc.Wta )
+  i = parseHHMMS( l, i, &loc.Wtd )
+  i = parseHHMMS( l, i, &loc.Wtp )
+  i = parseHHMM( l, i, &loc.Pta )
+  i = parseHHMM( l, i, &loc.Ptd )
+
+  i = parseStringTrim( l, i, 3, &loc.Platform )
+  i = parseStringTrim( l, i, 3, &loc.Line )
+  i = parseStringTrim( l, i, 3, &loc.Path )
+  i = parseActivity( l, i, &loc.Activity)
+
+  i = parseStringTrim( l, i, 2, &loc.EngAllow )
+  i = parseStringTrim( l, i, 2, &loc.PathAllow )
+  i = parseStringTrim( l, i, 2, &loc.PerfAllow )
+
+  s.Locations = append( s.Locations, loc )
+}
+
+func (c *CIF) parseLT( l string, s *Schedule ) {
+  var loc *Location = &Location{}
+  i := 0
+  i = parseString( l, i, 2, &loc.Id )
+
+  // Location is Tiploc + Suffix
+  i = parseString( l, i, 8, &loc.Location )
+  loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
+
+  i = parseHHMMS( l, i, &loc.Wta )
+  i = parseHHMM( l, i, &loc.Pta )
+
+  i = parseStringTrim( l, i, 3, &loc.Platform )
+  i = parseStringTrim( l, i, 3, &loc.Path )
+  i = parseActivity( l, i, &loc.Activity )
+
+  s.Locations = append( s.Locations, loc )
 }

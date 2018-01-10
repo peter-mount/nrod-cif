@@ -18,6 +18,7 @@ RUN go get -v \
       github.com/gorilla/mux \
       github.com/peter-mount/golib/rabbitmq \
       github.com/peter-mount/golib/statistics \
+      github.com/peter-mount/golib/util \
       gopkg.in/robfig/cron.v2 \
       gopkg.in/yaml.v2 \
       io/ioutil \
@@ -27,9 +28,9 @@ RUN go get -v \
       time
 
 # Import the source and compile
-WORKDIR /usr/local/go/src
-ADD bin bin/
-ADD cif cif/
+#WORKDIR /usr/local/go/src
+WORKDIR /go/src
+ADD . .
 
 # Now each binary
 RUN go build -v -x \

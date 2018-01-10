@@ -39,22 +39,11 @@ func main() {
   log.Println( "Import complete" )
   log.Println( db )
 
-  if r, ok := db.GetTiploc( "MSTONEE" ); ok {
-    log.Println( r )
-  }
-  if r, ok := db.GetTiploc( "VICTRIE" ); ok {
-    log.Println( r )
-  }
-
-  if r, ok := db.GetCRS( "STP" ); ok {
-    log.Println( r )
+  if s := db.GetSchedules( "Y74216" ); s != nil {
+    for _, sched := range s {
+      log.Println( sched.FullString() )
+    }
   }
 
-  if r, ok := db.GetCRS( "LBG" ); ok {
-    log.Println( r )
-  }
-
-  s := db.GetSchedules( "Y74216" )
-  log.Println( s )
   // todo write file
 }

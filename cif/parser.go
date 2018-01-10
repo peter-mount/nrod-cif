@@ -58,6 +58,21 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
           c.parseBX( line, schedule )
         }
 
+      case "LO":
+        if schedule != nil {
+          c.parseLO( line, schedule )
+        }
+
+      case "LI":
+        if schedule != nil {
+          c.parseLI( line, schedule )
+        }
+
+      case "LT":
+        if schedule != nil {
+          c.parseLT( line, schedule )
+        }
+
       case "ZZ":
         c.cleanup()
     }
