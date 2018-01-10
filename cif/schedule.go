@@ -222,18 +222,14 @@ func (c *CIF) parseLT( l string, s *Schedule ) {
 
 func newLocation() *Location {
   var loc *Location = &Location{}
-  loc.Wta.t = -1
-  loc.Wtd.t = -1
-  loc.Wtp.t = -1
+  loc.Pta.Set( -1 )
+  loc.Ptd.Set( -1 )
+  loc.Wta.Set( -1 )
+  loc.Wtd.Set( -1 )
+  loc.Wtp.Set( -1 )
   return loc
 }
 
 func (s *Schedule) appendLocation(l *Location) {
-  if l.Pta.t == 0 {
-    l.Pta.t = -1
-  }
-  if l.Ptd.t == 0 {
-    l.Ptd.t = -1
-  }
   s.Locations = append( s.Locations, l )
 }

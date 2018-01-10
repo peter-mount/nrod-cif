@@ -7,50 +7,50 @@ import (
 // Public Timetable time
 // Note: 00:00 is not possible as in CIF that means no-time
 type PublicTime struct {
-  t int
+  T int
 }
 
 func (t *PublicTime) String() string {
-  if t.t <= 0 {
+  if t.T <= 0 {
     return "     "
   }
 
-  return fmt.Sprintf( "%02d:%02d", t.t/3600, (t.t/60)%60 )
+  return fmt.Sprintf( "%02d:%02d", t.T/3600, (t.T/60)%60 )
 }
 
 func (t *PublicTime) Get() int {
-  return t.t
+  return t.T
 }
 
 func (t *PublicTime) Set( v int ) {
-  t.t = v
+  t.T = v
 }
 
 func (t *PublicTime) IsSet() bool {
-  return t.t<=0
+  return t.T<=0
 }
 
 // Working Timetable time
 type WorkingTime struct {
-  t int
+  T int
 }
 
 func (t *WorkingTime) String() string {
-  if t.t < 0 {
+  if t.T < 0 {
     return "        "
   }
 
-  return fmt.Sprintf( "%02d:%02d:%02d", t.t/3600, (t.t/60)%60, t.t%60 )
+  return fmt.Sprintf( "%02d:%02d:%02d", t.T/3600, (t.T/60)%60, t.T%60 )
 }
 
 func (t *WorkingTime) Get() int {
-  return t.t
+  return t.T
 }
 
 func (t *WorkingTime) Set( v int ) {
-  t.t = v
+  t.T = v
 }
 
 func (t *WorkingTime) IsSet() bool {
-  return t.t<0
+  return t.T<0
 }
