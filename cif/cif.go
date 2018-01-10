@@ -142,3 +142,19 @@ func (c *CIF) addSchedule( s *Schedule ) {
 
   c.schedules[ s.TrainUID ] = append( c.schedules[ s.TrainUID ], s )
 }
+
+func (c *CIF) deleteSchedule( s *Schedule ) {
+  if ary, exists := c.schedules[ s.TrainUID ]; exists {
+    var n []*Schedule
+    for _, e := range ary {
+      if !s.Equals( e ) {
+        n = append( n, e )
+      }
+    }
+    if len( n ) > 0 {
+      c.schedules[ s.TrainUID ] = n
+    } else {
+      delete( c.schedules, s.TrainUID )
+    }
+  }
+}

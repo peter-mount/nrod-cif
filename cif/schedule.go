@@ -1,7 +1,6 @@
 package cif
 
 import (
-  "log"
   "fmt"
   "strings"
   "time"
@@ -143,7 +142,15 @@ func (c *CIF ) parseBX( l string, s *Schedule ) {
 }
 
 func (c *CIF ) parseBSDelete( l string ) *Schedule {
-  log.Fatal( "Delete not yet implemented" )
+  var s Schedule = Schedule{}
+  i :=2
+  i++ // tx
+  i = parseString( l, i, 6, &s.TrainUID )
+  i = parseYYMMDD( l, i, &s.RunsFrom )
+  parseString( l, 79, 1, &s.STPIndicator )
+
+  c.deleteSchedule( &s )
+
   return nil
 }
 
