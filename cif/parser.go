@@ -121,8 +121,7 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
   }
 
   // Procede to the next block
-  return nil
-  //return c.parseSchedules( scanner, lastLine )
+  return c.parseSchedules( scanner, lastLine )
 }
 
 func (c *CIF) parseTiploc( line string ) ( bool, error ) {
@@ -149,18 +148,20 @@ func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   // Now run the rest of the import
   if err := c.db.Update( func( tx *bolt.Tx ) error {
 
+    count := 0
+
     c.parserInit( tx )
 
     // process the last line then continue & process that line
     if lastLine != "" {
-      if err := c.parseSchedule( lastLine ); err != nil {
+      if err := c.parseSchedule( lastLine, &count ); err != nil {
         return err
       }
     }
 
     for scanner.Scan() {
       line := scanner.Text()
-      if err := c.parseSchedule( line ); err != nil {
+      if err := c.parseSchedule( line, &count ); err != nil {
         return err
       }
     }
@@ -173,9 +174,13 @@ func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   return nil
 }
 
-func (c *CIF) parseSchedule( line string ) error {
+func (c *CIF) parseSchedule( line string, count *int ) error {
   switch line[0:2] {
     case "BS":
+      *count++
+      if (*count % 25000) == 0 {
+        log.Println( "Read", *count)
+      }
       return c.parseBS( line )
 
     case "BX":
@@ -191,6 +196,7 @@ func (c *CIF) parseSchedule( line string ) error {
       return c.parseLT( line )
 
     case "ZZ":
+      log.Println( "Read", *count)
       return c.parseZZ()
 
     // Ignore any unsupported records

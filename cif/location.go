@@ -26,6 +26,42 @@ type Location struct {
   PerfAllow   string
 }
 
+func (l *Location) Write( c *BinaryCodec ) {
+  c.WriteString( l.Id ).
+    WriteString( l.Location ).
+    WriteString( l.Tiploc ).
+    Write( l.Pta ).
+    Write( l.Ptd ).
+    Write( l.Wta ).
+    Write( l.Wtd ).
+    Write( l.Wtp ).
+    WriteString( l.Platform ).
+    WriteStringArray( l.Activity ).
+    WriteString( l.Line ).
+    WriteString( l.Path ).
+    WriteString( l.EngAllow ).
+    WriteString( l.PathAllow ).
+    WriteString( l.PerfAllow )
+}
+
+func (l *Location) Read( c *BinaryCodec ) {
+  c.ReadString( &l.Id ).
+    ReadString( &l.Location ).
+    ReadString( &l.Tiploc ).
+    Read( &l.Pta ).
+    Read( &l.Ptd ).
+    Read( &l.Wta ).
+    Read( &l.Wtd ).
+    Read( &l.Wtp ).
+    ReadString( &l.Platform ).
+    ReadStringArray( &l.Activity ).
+    ReadString( &l.Line ).
+    ReadString( &l.Path ).
+    ReadString( &l.EngAllow ).
+    ReadString( &l.PathAllow ).
+    ReadString( &l.PerfAllow )
+}
+
 func newLocation() *Location {
   var loc *Location = &Location{}
   loc.Pta.Set( -1 )

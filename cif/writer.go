@@ -107,6 +107,16 @@ func (c *BinaryCodec) WriteInt16( v int16 ) *BinaryCodec {
   return c
 }
 
+func (c *BinaryCodec) WriteBool( b bool ) *BinaryCodec {
+  if c.err == nil {
+    if b {
+      c.err = c.buf.WriteByte( 0 )
+    } else {
+      c.err = c.buf.WriteByte( 1 )
+    }
+  }
+  return c
+}
 
 func (c *BinaryCodec) WriteTime( t time.Time ) *BinaryCodec {
   if c.err == nil {

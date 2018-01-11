@@ -120,6 +120,21 @@ func (c *BinaryCodec) ReadInt16( i *int16 ) *BinaryCodec {
   return c
 }
 
+func (c *BinaryCodec) ReadBool( i *bool ) *BinaryCodec {
+  if c.err == nil {
+    if b, err := c.buf.ReadByte(); err != nil {
+      c.err = err
+    } else {
+      if b == 0 {
+        *i = false
+      } else {
+        *i = true
+      }
+    }
+  }
+  return c
+}
+
 func (c *BinaryCodec) ReadTime( i *time.Time ) *BinaryCodec {
   var b []byte
 

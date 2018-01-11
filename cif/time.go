@@ -10,6 +10,16 @@ type PublicTime struct {
   T int
 }
 
+func (t PublicTime) Write( c *BinaryCodec ) {
+  c.WriteInt32( int32( t.T ) )
+}
+
+func (t PublicTime) Read( c *BinaryCodec ) {
+  var i int32
+  c.ReadInt32( &i )
+  t.T = int(i)
+}
+
 func (t *PublicTime) String() string {
   if t.T <= 0 {
     return "     "
@@ -33,6 +43,16 @@ func (t *PublicTime) IsSet() bool {
 // Working Timetable time
 type WorkingTime struct {
   T int
+}
+
+func (t WorkingTime) Write( c *BinaryCodec ) {
+  c.WriteInt32( int32( t.T ) )
+}
+
+func (t WorkingTime) Read( c *BinaryCodec ) {
+  var i int32
+  c.ReadInt32( &i )
+  t.T = int(i)
 }
 
 func (t *WorkingTime) String() string {
