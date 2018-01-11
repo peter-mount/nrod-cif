@@ -54,7 +54,15 @@ func (c *CIF) cleanupCRS() error {
       ar = append( ar, t.Tiploc )
     }
 
-    c.put( c.crs, k, ar )
+    codec := NewBinaryCodec()
+    codec.WriteStringArray( ar )
+    if codec.Error() != nil {
+      return codec.Error()
+    }
+
+    if err := c.crs.Put( []byte( k ), codec.Bytes() ); err != nil {
+      return err
+    }
   }
 
   return nil
@@ -62,9 +70,15 @@ func (c *CIF) cleanupCRS() error {
 
 func (c *CIF) GetCRS( tx *bolt.Tx, crs string ) ( []*Tiploc, bool ) {
 
-  var ar []string
+  b := tx.Bucket( []byte("Crs") ).Get( []byte( crs ) )
+  if b == nil {
+    return nil, false
+  }
 
-  if err := c.get( tx.Bucket( []byte("Crs") ), crs, &ar ); err != nil {
+  var ar []string
+  NewBinaryCodecFrom( b ).ReadStringArray( &ar )
+
+  if len( ar ) == 0 {
     return nil, false
   }
 

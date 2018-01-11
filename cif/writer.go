@@ -113,7 +113,7 @@ func (c *BinaryCodec) WriteTime( t time.Time ) *BinaryCodec {
     if b, err := t.MarshalBinary(); err != nil {
       c.err = err
     } else {
-      _, c.err = c.buf.Write( b )
+      c.WriteBytes( b )
     }
   }
   return c

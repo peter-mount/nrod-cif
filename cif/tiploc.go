@@ -61,13 +61,11 @@ func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
   var tiploc *Tiploc = &Tiploc{}
 
   b := tx.Bucket( []byte("Tiploc") ).Get( []byte( t ) )
-  log.Println( t, b )
   if b == nil {
     return nil, false
   }
 
   NewBinaryCodecFrom( b ).Read( tiploc )
-  log.Println( t, tiploc )
   if tiploc.Tiploc == "" {
     return nil, false
   }
