@@ -23,11 +23,39 @@ type HD struct {
   // Spare 20
 }
 
+func (h *HD) Write( c *BinaryCodec ) {
+  c.WriteString( h.Id ).
+    WriteString( h.FileMainframeIdentity ).
+    WriteTime( h.DateOfExtract ).
+    WriteString( h.CurrentFileReference ).
+    WriteString( h.LastFileReference ).
+    WriteBool( h.Update ).
+    WriteString( h.Version ).
+    WriteTime( h.UserStartDate ).
+    WriteTime( h.UserEndDate )
+}
+
+func (h *HD) Read( c *BinaryCodec ) {
+  c.ReadString( &h.Id ).
+    ReadString( &h.FileMainframeIdentity ).
+    ReadTime( &h.DateOfExtract ).
+    ReadString( &h.CurrentFileReference ).
+    ReadString( &h.LastFileReference ).
+    ReadBool( &h.Update ).
+    ReadString( &h.Version ).
+    ReadTime( &h.UserStartDate ).
+    ReadTime( &h.UserEndDate )
+}
+
 func (c *CIF) GetHD() ( *HD, error ) {
   var h *HD = &HD{}
 
   if err := c.db.View( func( tx *bolt.Tx) error {
-    c.get( tx.Bucket( []byte("Meta") ), "lastCif", h )
+
+    b := tx.Bucket( []byte("Meta") ).Get( []byte( "lastCif" ) )
+    if b != nil {
+      NewBinaryCodecFrom( b ).Read( h )
+    }
     return nil
   }); err != nil {
     return nil, err

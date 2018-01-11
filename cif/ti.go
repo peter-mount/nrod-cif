@@ -30,8 +30,6 @@ func (c *CIF) putTiploc( t *Tiploc ) error {
     NewBinaryCodecFrom( b ).Read( &e )
   }
 
-  //c.get( c.tiploc, t.Tiploc, &e )
-
   // If we don't have an entry or this one is newer then persist
   if t.Tiploc != e.Tiploc || t.DateOfExtract.After( e.DateOfExtract ) {
     //return c.put( c.tiploc, t.Tiploc, &t )

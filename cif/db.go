@@ -3,7 +3,6 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
-  "errors"
   "log"
   "os"
   "os/signal"
@@ -78,26 +77,6 @@ func (c *CIF) clearBucket( bucket *bolt.Bucket ) error {
   return bucket.ForEach( func( k, v []byte) error {
     return bucket.Delete( k )
   })
-}
-
-// Store a struct into a bucket
-func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
-  bar := b.Get( []byte(k) )
-  if bar != nil {
-    return getInterface( bar, i )
-  }
-  return errors.New( k + " Not found")
-}
-
-// Retrieve a struct from a bucket
-// If the entry does not exist then this returns nil
-func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
-  if bar, err := getBytes( i ); err != nil {
-    return err
-  } else {
-    return b.Put( []byte(k), bar )
-  }
-  return nil
 }
 
 func (c *CIF) resetDB() error {

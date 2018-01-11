@@ -37,11 +37,7 @@ ADD . .
 RUN go build -v -x \
       -o /dest/bin/cifserver bin/cifserver
 
-# Now each binary
-#RUN go build -v -x \
-#      -o /dest/bin/cifimport bin/cifimport
-
 # Finally build the final runtime container will all required files
 FROM scratch
 COPY --from=build /dest/ /
-#CMD ["td"]
+CMD ["cifserver"]

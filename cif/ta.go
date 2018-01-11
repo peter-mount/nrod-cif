@@ -18,8 +18,13 @@ func (c *CIF) parseTA( l string ) error {
 
   if newTiploc != "" {
     // Remove the old entry only if it's older than the current CIF file
+    b := c.tiploc.Get( []byte( t.Tiploc ) )
+
     var ot Tiploc
-    c.get( c.tiploc, t.Tiploc, &ot )
+    if( b != nil ) {
+      NewBinaryCodecFrom( b ).Read( &ot )
+    }
+
     if t.Tiploc == ot.Tiploc && c.importhd.DateOfExtract.After( ot.DateOfExtract) {
       if err := c.tiploc.Delete( []byte( t.Tiploc ) ); err != nil {
         return err

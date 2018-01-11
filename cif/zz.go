@@ -7,13 +7,14 @@ func (c *CIF) parseZZ() error {
       return err
     }
 
-    // Rebuild any indices
-    //if err := c.Rebuild( c.tx ); err != nil {
-    //  return err
-    //}
-
     // Finally update header to this imported one
-    if err := c.put( c.tx.Bucket( []byte("Meta") ), "lastCif", c.importhd ); err != nil {
+    codec := NewBinaryCodec()
+    codec.Write( c.importhd )
+    if codec.Error() != nil {
+      return codec.Error()
+    }
+
+    if err := c.tx.Bucket( []byte("Meta") ).Put( []byte( "lastCif" ), codec.Bytes() ); err != nil {
       return err
     }
 

@@ -5,7 +5,7 @@ docker build -t test . || exit 1
 
 #exit
 
-rm -f /home/peter/tmp/cif.db
+#rm -f /home/peter/tmp/cif.db
 
 docker run -it --rm \
   --name cifserver \
