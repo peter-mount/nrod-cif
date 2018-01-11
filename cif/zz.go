@@ -8,9 +8,9 @@ func (c *CIF) parseZZ() error {
     }
 
     // Rebuild any indices
-    if err := c.Rebuild( c.tx ); err != nil {
-      return err
-    }
+    //if err := c.Rebuild( c.tx ); err != nil {
+    //  return err
+    //}
 
     // Finally update header to this imported one
     if err := c.put( c.tx.Bucket( []byte("Meta") ), "lastCif", c.importhd ); err != nil {

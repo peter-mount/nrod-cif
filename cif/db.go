@@ -58,7 +58,6 @@ func OpenCIF( dbFile string ) ( *CIF, error ) {
 // Ensures we have the appropriate buckets
 func (c *CIF) initDB() error {
   return c.db.Update( func( tx *bolt.Tx ) error {
-    var rebuildRequired bool
 
     for _, n := range []string { "Meta", "Tiploc", "Crs", "Stanox", "Schedule" } {
       var nb []byte = []byte(n)
@@ -67,12 +66,7 @@ func (c *CIF) initDB() error {
         if _, err := tx.CreateBucket( nb ); err != nil {
           return err
         }
-        rebuildRequired = true
       }
-    }
-
-    if rebuildRequired {
-      return c.Rebuild( tx )
     }
 
     return nil
@@ -120,28 +114,4 @@ func (c *CIF) resetDB() error {
   }
 
   return c.clearBucket( c.schedule )
-}
-
-func (c *CIF) Rebuild( tx *bolt.Tx ) error {
-
-  c.tiploc = tx.Bucket( []byte("Tiploc") )
-  c.crs = tx.Bucket( []byte("Crs") )
-  c.stanox = tx.Bucket( []byte("Stanox") )
-  c.schedule = tx.Bucket( []byte("Schedule") )
-
-  if err := c.cleanupStanox(); err != nil {
-    return err
-  }
-
-  if err := c.cleanupCRS(); err != nil {
-    return err
-  }
-
-  /*
-  if err := c.cleanupSchedules(); err != nil {
-    return err
-  }
-  */
-
-  return nil
 }

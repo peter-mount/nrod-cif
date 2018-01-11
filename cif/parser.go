@@ -5,6 +5,7 @@ import (
   "errors"
   "bufio"
   bolt "github.com/coreos/bbolt"
+  "log"
   "os"
 )
 
@@ -29,10 +30,13 @@ func (c *CIF) Parse( fname string ) error {
 }
 
 func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
+  // Parse the header in it's own tx. This may wipe the DB if its a full import
   if err := c.parseFileHeader( scanner ); err != nil {
     return err
   }
-  return c.parseFileBody( scanner )
+
+  // Now start with Tiplocs
+  return c.parseTiplocs( scanner )
 }
 
 // Sets the CIF structure up to the current transaction
@@ -78,7 +82,10 @@ func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) error {
 }
 
 // Parses the rest of the file after the header
-func (c *CIF) parseFileBody( scanner *bufio.Scanner ) error {
+func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
+  log.Println( "Parsing Tiploc's" )
+
+  var lastLine string
 
   // Now run the rest of the import
   if err := c.db.Update( func( tx *bolt.Tx ) error {
@@ -87,10 +94,76 @@ func (c *CIF) parseFileBody( scanner *bufio.Scanner ) error {
 
     for scanner.Scan() {
       line := scanner.Text()
-      if err := c.parseLine( line ); err != nil {
+      if bail, err := c.parseTiploc( line ); err != nil {
+        return err
+      } else if bail {
+        lastLine = line
+        return nil
+      }
+    }
+
+    return nil
+  }); err != nil {
+    return err
+  }
+
+  // Now rebuild the Tiploc based buckets
+  if err := c.db.Update( func( tx *bolt.Tx ) error {
+    c.parserInit( tx )
+
+    if err := c.cleanupStanox(); err != nil {
+      return err
+    }
+
+    return c.cleanupCRS()
+  }); err != nil {
+    return err
+  }
+
+  // Procede to the next block
+  return c.parseSchedules( scanner, lastLine )
+}
+
+func (c *CIF) parseTiploc( line string ) ( bool, error ) {
+  switch line[0:2] {
+    case "TI":
+      return false, c.parseTI( line )
+
+    case "TA":
+      return false, c.parseTA( line )
+
+    case "TD":
+      return false, c.parseTD( line )
+
+    // If not a Tiploc record then bail out to the next stage
+    default:
+      return true, nil
+  }
+}
+
+// Parses the rest of the file after the header
+func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
+  log.Println( "Parsing Schedules" )
+
+  // Now run the rest of the import
+  if err := c.db.Update( func( tx *bolt.Tx ) error {
+
+    c.parserInit( tx )
+
+    // process the last line then continue & process that line
+    if lastLine != "" {
+      if err := c.parseSchedule( lastLine ); err != nil {
         return err
       }
     }
+
+    for scanner.Scan() {
+      line := scanner.Text()
+      if err := c.parseSchedule( line ); err != nil {
+        return err
+      }
+    }
+
     return nil
   }); err != nil {
     return err
@@ -99,20 +172,8 @@ func (c *CIF) parseFileBody( scanner *bufio.Scanner ) error {
   return nil
 }
 
-func (c *CIF) parseLine( line string ) error {
+func (c *CIF) parseSchedule( line string ) error {
   switch line[0:2] {
-    case "HD":
-      return errors.New( "Erroneous HD record encountered" )
-
-    case "TI":
-      return c.parseTI( line )
-
-    case "TA":
-      return c.parseTA( line )
-
-    case "TD":
-      return c.parseTD( line )
-
     case "BS":
       return c.parseBS( line )
 
