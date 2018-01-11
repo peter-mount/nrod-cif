@@ -77,3 +77,75 @@ func (c *CIF) initDB() error {
     return nil
   })
 }
+
+// Clear out a bucket
+func (c *CIF) clearBucket( bucket *bolt.Bucket ) error {
+  return bucket.ForEach( func( k, v []byte) error {
+    return bucket.Delete( k )
+  })
+}
+
+// Store a struct into a bucket
+func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
+  bar := b.Get( []byte(k) )
+  if bar != nil {
+    if err := getInterface( bar, i ); err != nil {
+      return errors.WithStack( err )
+    }
+    return nil
+  }
+  return errors.New( k + " Not found")
+}
+
+// Retrieve a struct from a bucket
+// If the entry does not exist then this returns nil
+func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
+  if bar, err := getBytes( i ); err != nil {
+    return err
+  } else {
+    if err := b.Put( []byte(k), bar ); err != nil {
+      return errors.WithStack( err )
+    }
+  }
+  return nil
+}
+
+func (c *CIF) resetDB() error {
+  if err := c.clearBucket( c.tiploc ); err != nil {
+    return err
+  }
+
+  if err := c.clearBucket( c.crs ); err != nil {
+    return err
+  }
+
+  if err := c.clearBucket( c.stanox ); err != nil {
+    return err
+  }
+
+  return c.clearBucket( c.schedule )
+}
+
+func (c *CIF) Rebuild( tx *bolt.Tx ) error {
+
+  c.tiploc = tx.Bucket( []byte("Tiploc") )
+  c.crs = tx.Bucket( []byte("Crs") )
+  c.stanox = tx.Bucket( []byte("Stanox") )
+  c.schedule = tx.Bucket( []byte("Schedule") )
+
+  if err := c.cleanupStanox(); err != nil {
+    return err
+  }
+
+  if err := c.cleanupCRS(); err != nil {
+    return err
+  }
+
+  /*
+  if err := c.cleanupSchedules(); err != nil {
+    return err
+  }
+  */
+
+  return nil
+}
