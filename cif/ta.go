@@ -16,17 +16,20 @@ func (c *CIF) parseTA( l string ) error {
   var newTiploc string
   i = parseStringTrim( l, i, 7, &newTiploc )
 
-  if newTiploc == "" {
-    return c.put( c.tiploc, t.Tiploc, &t )
-  } else {
-    // Remove the old entry
-    if err := c.tiploc.Delete( []byte( t.Tiploc ) ); err != nil {
-      return err
+  if newTiploc != "" {
+    // Remove the old entry only if it's older than the current CIF file
+    var ot Tiploc
+    c.get( c.tiploc, t.Tiploc, &ot )
+    if t.Tiploc == ot.Tiploc && c.importhd.DateOfExtract.After( ot.DateOfExtract) {
+      if err := c.tiploc.Delete( []byte( t.Tiploc ) ); err != nil {
+        return err
+      }
     }
 
-    // Update and store as the new entry
+    // Update the "new" entry to the new name
     t.Tiploc = newTiploc
-    return c.put( c.tiploc, newTiploc, &t )
   }
 
+  // persist
+  return c.putTiploc( &t )
 }

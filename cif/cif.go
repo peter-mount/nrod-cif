@@ -4,7 +4,6 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
-  "github.com/pkg/errors"
 )
 
 type CIF struct {

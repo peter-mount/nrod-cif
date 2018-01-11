@@ -3,6 +3,7 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
+  "errors"
   "log"
   "os"
   "os/signal"
@@ -89,10 +90,7 @@ func (c *CIF) clearBucket( bucket *bolt.Bucket ) error {
 func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
   bar := b.Get( []byte(k) )
   if bar != nil {
-    if err := getInterface( bar, i ); err != nil {
-      return errors.WithStack( err )
-    }
-    return nil
+    return getInterface( bar, i )
   }
   return errors.New( k + " Not found")
 }
@@ -103,9 +101,7 @@ func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
   if bar, err := getBytes( i ); err != nil {
     return err
   } else {
-    if err := b.Put( []byte(k), bar ); err != nil {
-      return errors.WithStack( err )
-    }
+    return b.Put( []byte(k), bar )
   }
   return nil
 }

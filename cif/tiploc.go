@@ -8,16 +8,19 @@ import (
   "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
+  "time"
 )
 
 type Tiploc struct {
-  Tiploc    string
-  NLC       int
-  NLCCheck  string
-  Desc      string
-  Stanox    int
-  CRS       string
-  NLCDesc   string
+  Tiploc          string
+  NLC             int
+  NLCCheck        string
+  Desc            string
+  Stanox          int
+  CRS             string
+  NLCDesc         string
+  // The CIF extract this entry is from
+  DateOfExtract   time.Time
 }
 
 func (t *Tiploc) String() string {

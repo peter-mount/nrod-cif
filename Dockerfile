@@ -20,7 +20,6 @@ RUN go get -v \
       github.com/peter-mount/golib/rabbitmq \
       github.com/peter-mount/golib/statistics \
       github.com/peter-mount/golib/util \
-      github.com/pkg/errors \
       gopkg.in/robfig/cron.v2 \
       gopkg.in/yaml.v2 \
       io/ioutil \
