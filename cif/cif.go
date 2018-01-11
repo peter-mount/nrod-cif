@@ -11,9 +11,14 @@ type CIF struct {
   db           *bolt.DB
   // Last import HD record
   header       *HD
+  // Current import HD record
+  importhd     *HD
   // === Entries used during import only
   tx           *bolt.Tx
+  //
   curSchedule  *Schedule
+  update        bool
+  //
   tiploc       *bolt.Bucket
   crs          *bolt.Bucket
   stanox       *bolt.Bucket
@@ -50,7 +55,7 @@ func (c *CIF) resetDB() error {
   }
 
   return c.schedule.ForEach( func( k, v []byte) error {
-    return c.tiploc.Delete( k )
+    return c.schedule.Delete( k )
   })
 }
 

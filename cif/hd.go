@@ -70,7 +70,8 @@ func (c *CIF) parseHD( l string ) error {
     log.Println( "Performing Full import" )
   }
 
-  return c.put( c.tx.Bucket( []byte("Meta") ), "lastCif", h )
+  c.importhd = h
+  return nil
 }
 
 func (h *HD ) String() string {
