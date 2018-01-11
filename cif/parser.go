@@ -3,6 +3,7 @@ package cif
 
 import (
   "bufio"
+  bolt "github.com/coreos/bbolt"
   "os"
 )
 
@@ -27,23 +28,19 @@ func (c *CIF) Parse( fname string ) error {
 }
 
 func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
-  tx, err := c.db.Begin(true)
-  if err != nil {
-    return err
-  }
-  defer tx.Rollback()
+  if err := c.db.Update( func( tx *bolt.Tx ) error {
 
-  c.tx = tx
-  c.tiploc = tx.Bucket( []byte("Tiploc") )
-  c.crs = tx.Bucket( []byte("Crs") )
-  c.stanox = tx.Bucket( []byte("Stanox") )
-  c.schedule = tx.Bucket( []byte("Schedule") )
+    c.tx = tx
+    c.tiploc = tx.Bucket( []byte("Tiploc") )
+    c.crs = tx.Bucket( []byte("Crs") )
+    c.stanox = tx.Bucket( []byte("Stanox") )
+    c.schedule = tx.Bucket( []byte("Schedule") )
 
-  var schedule *Schedule
+    var schedule *Schedule
 
-  for scanner.Scan() {
-    line := scanner.Text()
-    switch line[0:2] {
+    for scanner.Scan() {
+      line := scanner.Text()
+      switch line[0:2] {
       case "HD":
         if err := c.parseHD( line ); err != nil {
           return err
@@ -86,14 +83,14 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
 
         /*
       case "LO":
-        c.parseLO( line )
+      c.parseLO( line )
 
-      case "LI":
-        c.parseLI( line )
+    case "LI":
+    c.parseLI( line )
 
-      case "LT":
-        c.parseLT( line )
-        */
+  case "LT":
+  c.parseLT( line )
+  */
 
       case "ZZ":
         // Save last schedule
@@ -106,8 +103,12 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
         if err := c.Rebuild( c.tx ); err != nil {
           return err
         }
+      }
     }
+    return nil
+  }); err != nil {
+    return err
   }
 
-  return tx.Commit()
+  return nil
 }
