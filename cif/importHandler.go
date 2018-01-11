@@ -22,7 +22,7 @@ func (c *CIF) ImportHandler( rw http.ResponseWriter, req *http.Request ) {
   }
 
   if err := c.parseFile( scanner ); err != nil {
-    log.Println( "CIF Import:", err )
+    log.Printf( "CIF Import: %+v", err )
     result.Status = 500
     result.Message = err.Error()
   } else {

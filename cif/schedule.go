@@ -98,7 +98,8 @@ func (c *CIF ) parseBS( l string ) {
 }
 
 func (c *CIF ) parseBSNew( l string ) {
-  s := c.curSchedule
+  s := &Schedule{}
+  c.curSchedule = s
 
   // Skip BS
   i := 2
@@ -143,7 +144,10 @@ func (c *CIF ) parseBX( l string ) {
 }
 
 func (c *CIF ) parseBSDelete( l string ) *Schedule {
+  c.curSchedule = nil
+
   var s Schedule = Schedule{}
+
   i :=2
   i++ // tx
   i = parseString( l, i, 6, &s.TrainUID )

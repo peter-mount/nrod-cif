@@ -46,7 +46,7 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
           return err
         }
 
-        if !c.Header.Update {
+        if !c.header.Update {
           if err := c.resetDB(); err != nil {
             return err
           }
@@ -102,6 +102,13 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
 
         if err := c.Rebuild( c.tx ); err != nil {
           return err
+        }
+
+        // Finally update header
+        if h, err := c.GetHD(); err != nil {
+          return err
+        } else {
+          c.header = h
         }
       }
     }

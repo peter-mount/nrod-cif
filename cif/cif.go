@@ -4,15 +4,15 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
-  "errors"
-  "fmt"
+  "github.com/pkg/errors"
 )
 
 type CIF struct {
   db           *bolt.DB
+  // Last import HD record
+  header       *HD
   // === Entries used during import only
   tx           *bolt.Tx
-  Header       *HD
   curSchedule  *Schedule
   tiploc       *bolt.Bucket
   crs          *bolt.Bucket
@@ -23,7 +23,10 @@ type CIF struct {
 func (c *CIF) get( b *bolt.Bucket, k string, i interface{} ) error {
   bar := b.Get( []byte(k) )
   if bar != nil {
-    return getInterface( bar, i )
+    if err := getInterface( bar, i ); err != nil {
+      return errors.WithStack( err )
+    }
+    return nil
   }
   return errors.New( k + " Not found")
 }
@@ -32,8 +35,11 @@ func (c *CIF) put( b *bolt.Bucket, k string, i interface{} ) error {
   if bar, err := getBytes( i ); err != nil {
     return err
   } else {
-    return b.Put( []byte(k), bar )
+    if err := b.Put( []byte(k), bar ); err != nil {
+      return errors.WithStack( err )
+    }
   }
+  return nil
 }
 
 func (c *CIF) resetDB() error {
@@ -49,13 +55,7 @@ func (c *CIF) resetDB() error {
 }
 
 func (c *CIF) String() string {
-  return fmt.Sprintf(
-    "CIF %s Extracted %v Date Range %v - %v Update %s",
-    c.Header.FileMainframeIdentity,
-    c.Header.DateOfExtract.Format( HumanDateTime ),
-    c.Header.UserStartDate.Format( HumanDate ),
-    c.Header.UserEndDate.Format( HumanDate ),
-    c.Header.Update )
+  return c.header.String()
 }
 
 func (c *CIF) Rebuild( tx *bolt.Tx ) error {
@@ -73,9 +73,11 @@ func (c *CIF) Rebuild( tx *bolt.Tx ) error {
     return err
   }
 
+  /*
   if err := c.cleanupSchedules(); err != nil {
     return err
   }
+  */
 
   return nil
 }
