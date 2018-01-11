@@ -23,6 +23,28 @@ type Tiploc struct {
   DateOfExtract   time.Time
 }
 
+func (t *Tiploc) Write( c *BinaryCodec ) {
+  c.WriteString( t.Tiploc ).
+    WriteInt( t.NLC ).
+    WriteString( t.NLCCheck ).
+    WriteString( t.Desc ).
+    WriteInt( t.Stanox ).
+    WriteString( t.CRS ).
+    WriteString( t.NLCDesc ).
+    WriteTime( t.DateOfExtract )
+}
+
+func (t *Tiploc) Read( c *BinaryCodec ) {
+  c.ReadString( &t.Tiploc ).
+    ReadInt( &t.NLC ).
+    ReadString( &t.NLCCheck ).
+    ReadString( &t.Desc ).
+    ReadInt( &t.Stanox ).
+    ReadString( &t.CRS ).
+    ReadString( &t.NLCDesc ).
+    ReadTime( &t.DateOfExtract )
+}
+
 func (t *Tiploc) String() string {
   return fmt.Sprintf(
     "Tiploc[%s, crs=%s, stanox=%05d, nlc=%d, desc=%s, nlcDesc=%s]",
@@ -35,9 +57,18 @@ func (t *Tiploc) String() string {
 }
 
 func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
+
   var tiploc *Tiploc = &Tiploc{}
 
-  if err := c.get( tx.Bucket( []byte("Tiploc") ), t, tiploc ); err != nil {
+  b := tx.Bucket( []byte("Tiploc") ).Get( []byte( t ) )
+  log.Println( t, b )
+  if b == nil {
+    return nil, false
+  }
+
+  NewBinaryCodecFrom( b ).Read( tiploc )
+  log.Println( t, tiploc )
+  if tiploc.Tiploc == "" {
     return nil, false
   }
 

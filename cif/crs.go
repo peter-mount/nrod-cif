@@ -25,9 +25,7 @@ func (c *CIF) cleanupCRS() error {
 
   if err := c.tiploc.ForEach( func( k, v []byte) error {
     var tiploc *Tiploc = &Tiploc{}
-    if err := getInterface( v, tiploc ); err != nil {
-      return err
-    }
+    NewBinaryCodecFrom( v ).Read( tiploc )
 
     if tiploc.CRS != "" {
       crs[ tiploc.CRS ] = append( crs[ tiploc.CRS ], tiploc )
@@ -94,7 +92,7 @@ func (c *CIF) CRSHandler( w http.ResponseWriter, r *http.Request ) {
       statistics.Incr( "crs.404" )
       w.WriteHeader( 404 )
     }
-    
+
     return nil
   }); err != nil {
     log.Println( "Get CRS", crs, err )

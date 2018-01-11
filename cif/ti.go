@@ -23,12 +23,25 @@ func (c *CIF) putTiploc( t *Tiploc ) error {
   t.DateOfExtract = c.importhd.DateOfExtract
 
   // Retrieve the existing entry (if any)
+  b := c.tiploc.Get( []byte( t.Tiploc ) )
+
   var e Tiploc
-  c.get( c.tiploc, t.Tiploc, &e )
+  if( b != nil ) {
+    NewBinaryCodecFrom( b ).Read( &e )
+  }
+
+  //c.get( c.tiploc, t.Tiploc, &e )
 
   // If we don't have an entry or this one is newer then persist
   if t.Tiploc != e.Tiploc || t.DateOfExtract.After( e.DateOfExtract ) {
-    return c.put( c.tiploc, t.Tiploc, &t )
+    //return c.put( c.tiploc, t.Tiploc, &t )
+    codec := NewBinaryCodec()
+    codec.Write( t )
+    if codec.Error() != nil {
+      return codec.Error()
+    }
+
+    return c.tiploc.Put( []byte( t.Tiploc ), codec.Bytes() )
   }
 
   return nil

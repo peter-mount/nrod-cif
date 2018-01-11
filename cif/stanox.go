@@ -26,9 +26,7 @@ func (c *CIF) cleanupStanox() error {
 
   if err := c.tiploc.ForEach( func( k, v []byte) error {
     var tiploc *Tiploc = &Tiploc{}
-    if err := getInterface( v, tiploc ); err != nil {
-      return err
-    }
+    NewBinaryCodecFrom( v ).Read( tiploc )
 
     if tiploc.Stanox > 0 {
       stanox[ tiploc.Stanox ] = append( stanox[ tiploc.Stanox ], tiploc )
@@ -120,7 +118,7 @@ func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
       statistics.Incr( "stanox.404" )
       w.WriteHeader( 404 )
     }
-    
+
     return nil
   }); err != nil {
     statistics.Incr( "stanox.500" )
