@@ -44,30 +44,24 @@ func OpenCIF( dbFile string ) ( *CIF, error ) {
 
 // Ensures we have the appropriate buckets
 func (c *CIF) initDB() error {
-  tx, err := c.db.Begin(true)
-  if err != nil {
-    return err
-  }
-  defer tx.Rollback()
+  return c.db.Update( func( tx *bolt.Tx ) error {
+    var rebuildRequired bool
 
-  var rebuildRequired bool
-
-  for _, n := range []string { "Tiploc", "Crs", "Stanox", "Schedule" } {
-    var nb []byte = []byte(n)
-    if bucket := tx.Bucket( nb ); bucket == nil {
-      log.Println( "Creating bucket", n )
-      if _, err := tx.CreateBucket( nb ); err != nil {
-        return err
+    for _, n := range []string { "Tiploc", "Crs", "Stanox", "Schedule" } {
+      var nb []byte = []byte(n)
+      if bucket := tx.Bucket( nb ); bucket == nil {
+        log.Println( "Creating bucket", n )
+        if _, err := tx.CreateBucket( nb ); err != nil {
+          return err
+        }
+        rebuildRequired = true
       }
-      rebuildRequired = true
     }
-  }
 
-  if rebuildRequired {
-    if err := c.Rebuild( tx ); err != nil {
-      return err
+    if rebuildRequired {
+      return c.Rebuild( tx )
     }
-  }
 
-  return tx.Commit()
+    return nil
+  })
 }

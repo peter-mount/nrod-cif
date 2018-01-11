@@ -63,6 +63,7 @@ func (c *CIF) Rebuild( tx *bolt.Tx ) error {
   c.tiploc = tx.Bucket( []byte("Tiploc") )
   c.crs = tx.Bucket( []byte("Crs") )
   c.stanox = tx.Bucket( []byte("Stanox") )
+  c.schedule = tx.Bucket( []byte("Schedule") )
 
   if err := c.cleanupStanox(); err != nil {
     return err
