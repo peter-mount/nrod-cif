@@ -121,7 +121,8 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
   }
 
   // Procede to the next block
-  return c.parseSchedules( scanner, lastLine )
+  return nil
+  //return c.parseSchedules( scanner, lastLine )
 }
 
 func (c *CIF) parseTiploc( line string ) ( bool, error ) {

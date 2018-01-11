@@ -50,9 +50,17 @@ func (c *CIF) cleanupStanox() error {
     // Update to the new crs field
     if crs != "" {
       for _, t := range s {
-        t.CRS = crs
-        if err := c.put( c.tiploc, t.Tiploc, &t ); err != nil {
-          return err
+        if t.CRS != crs {
+          t.CRS = crs
+          codec := NewBinaryCodec()
+          codec.Write( t )
+          if codec.Error() != nil {
+            return codec.Error()
+          }
+
+          if err := c.tiploc.Put( []byte( t.Tiploc ), codec.Bytes() ); err != nil {
+            return err
+          }
         }
       }
     }
@@ -74,7 +82,15 @@ func (c *CIF) cleanupStanox() error {
       ar = append( ar, t.Tiploc )
     }
 
-    c.put( c.stanox, strconv.FormatInt( int64( k ), 10 ), ar )
+    codec := NewBinaryCodec()
+    codec.WriteStringArray( ar )
+    if codec.Error() != nil {
+      return codec.Error()
+    }
+
+    if err := c.stanox.Put( []byte( strconv.FormatInt( int64( k ), 10 ) ), codec.Bytes() ); err != nil {
+      return err
+    }
   }
 
   return nil
@@ -82,20 +98,26 @@ func (c *CIF) cleanupStanox() error {
 
 func (c *CIF) GetStanox( tx *bolt.Tx, stanox int ) ( []*Tiploc, bool ) {
 
-    var ar []string
+  b := tx.Bucket( []byte("Stanox") ).Get( []byte( strconv.FormatInt( int64( stanox ), 10 ) ) )
+  if b == nil {
+    return nil, false
+  }
 
-    if err := c.get( tx.Bucket( []byte("Stanox") ), strconv.FormatInt( int64( stanox ), 10 ), &ar ); err != nil {
-      return nil, false
+  var ar []string
+  NewBinaryCodecFrom( b ).ReadStringArray( &ar )
+
+  if len( ar ) == 0 {
+    return nil, false
+  }
+
+  var t []*Tiploc
+  for _, k := range ar {
+    if tiploc, exists := c.GetTiploc( tx, k ); exists {
+      t = append( t, tiploc )
     }
+  }
 
-    var t []*Tiploc
-    for _, k := range ar {
-      if tiploc, exists := c.GetTiploc( tx, k ); exists {
-        t = append( t, tiploc )
-      }
-    }
-
-    return t, len( t ) > 0
+  return t, len( t ) > 0
 }
 
 func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
