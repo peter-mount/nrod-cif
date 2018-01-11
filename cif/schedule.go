@@ -296,7 +296,7 @@ func (c *CIF) cleanupSchedules() error {
 
   return c.schedule.ForEach( func( k, v []byte ) error {
     var ar []*Schedule
-    if err := getInterface( v, ar ); err != nil {
+    if err := getInterface( v, &ar ); err != nil {
       return err
     }
 
