@@ -81,6 +81,14 @@ func (c *CIF) GetHD() (*HD, error)
 GetHD retrieves the latest HD record of the latest cif file imported into the
 database.
 
+#### func (*CIF) GetSchedule
+
+```go
+func (c *CIF) GetSchedule(tx *bolt.Tx, uid string, date time.Time, stp string) *Schedule
+```
+GetSchedule returns a specific Schedule's for a specific TrainUID, startDate and
+STPIndicator If no schedule exists for the required key then nil is returned
+
 #### func (*CIF) GetSchedulesByUID
 
 ```go
@@ -183,6 +191,22 @@ simple authentication to this handler.
 func (c *CIF) OpenDB(dbFile string) error
 ```
 OpenDB opens a CIF database.
+
+#### func (*CIF) ScheduleHandler
+
+```go
+func (c *CIF) ScheduleHandler(w http.ResponseWriter, r *http.Request)
+```
+ScheduleHandler implements a net/http handler that implements a simple Rest
+service to retrieve all schedules for a specific uid, date and STPIndicator The
+handler must have {uid} set in the path for this to work.
+
+For example:
+
+router.HandleFunc( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods(
+"GET" )
+
+where db is a pointer to an active CIF struct.
 
 #### func (*CIF) ScheduleUIDHandler
 

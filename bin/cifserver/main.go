@@ -54,6 +54,7 @@ func main() {
   server.Router.HandleFunc( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
   server.Router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
 
+  server.Router.HandleFunc( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods( "GET" )
   server.Router.HandleFunc( "/schedule/{uid}", db.ScheduleUIDHandler ).Methods( "GET" )
 
   server.Router.HandleFunc( "/importCIF", db.ImportHandler ).Methods( "POST" )
