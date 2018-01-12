@@ -15,30 +15,30 @@ type Schedule struct {
   RunsTo                    time.Time
   // The day's of the week the service will run
   DaysRun                   string
-  BankHolRun                string
+  BankHolRun                string    `json:",omitempty"`
   Status                    string
   Category                  string
   // The identity sometimes confusingly called the Headcode of the service.
   // This is the value you would see in the nrod-td feed
-  TrainIdentity             string
+  TrainIdentity             string    `json:",omitempty"`
   // The headcode of this service. Don't confuse with TrainIdentity above
-  Headcode                  int
-  ServiceCode               int
-  PortionId                 string
-  PowerType                 string
-  TimingLoad                string
-  Speed                     int
-  OperatingCharacteristics  string
-  SeatingClass              string
-  Sleepers                  string
-  Reservations              string
-  CateringCode              string
-  ServiceBranding           string
+  Headcode                  int       `json:",omitempty"`
+  ServiceCode               int       `json:",omitempty"`
+  PortionId                 string    `json:",omitempty"`
+  PowerType                 string    `json:",omitempty"`
+  TimingLoad                string    `json:",omitempty"`
+  Speed                     int       `json:",omitempty"`
+  OperatingCharacteristics  string    `json:",omitempty"`
+  SeatingClass              string    `json:",omitempty"`
+  Sleepers                  string    `json:",omitempty"`
+  Reservations              string    `json:",omitempty"`
+  CateringCode              string    `json:",omitempty"`
+  ServiceBranding           string    `json:",omitempty"`
   // The STP Indicator
   STPIndicator              string
-  UICCode                   int
+  UICCode                   int       `json:",omitempty"`
   // The operator of this service
-  ATOCCode                  string
+  ATOCCode                  string    `json:",omitempty"`
   ApplicableTimetable       bool
   // LO, LI & LT entries
   Locations              []*Location
@@ -46,6 +46,7 @@ type Schedule struct {
   DateOfExtract             time.Time
 }
 
+// BinaryCodec writer
 func ( s *Schedule) Write( c *codec.BinaryCodec ) {
   c.WriteString( s.TrainUID ).
     WriteTime( s.RunsFrom ).
@@ -79,6 +80,7 @@ func ( s *Schedule) Write( c *codec.BinaryCodec ) {
   }
 }
 
+// BinaryCodec reader
 func ( s *Schedule) Read( c *codec.BinaryCodec ) {
   c.ReadString( &s.TrainUID ).
     ReadTime( &s.RunsFrom ).
