@@ -146,82 +146,28 @@ func (c *CIF) addSchedule() error {
   // Link it to this CIF file & persist
   s.DateOfExtract = c.importhd.DateOfExtract
 
-  ar, _ := c.getSchedules( s.TrainUID )
+  //
+  key := []byte( s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator )
 
-  // Check to see if we have a comparable entry. If so then replace it
-  for i, e := range ar {
-    if s.Equals( e ) {
-      // Only replace & persist if the new schedule was extracted after the existing entry
-      if s.DateOfExtract.After( e.DateOfExtract ) {
-        ar[ i ] = s
-        return c.putSchedules( s.TrainUID, ar )
-      }
-      return nil
+  var os Schedule = Schedule{}
+  b := c.schedule.Get( key )
+  dec := codec.NewBinaryCodecFrom( b )
+  dec.Read( &os )
+  if !s.Equals( &os ) || s.DateOfExtract.After( os.DateOfExtract ) {
+    enc := codec.NewBinaryCodec()
+    enc.Write( s )
+    if enc.Error() != nil {
+      return enc.Error()
     }
+    return c.schedule.Put( key, enc.Bytes() )
   }
 
-  // It's new for this uid so append & persist
-  ar = append( ar, s )
-  return c.putSchedules( s.TrainUID, ar )
-}
-
-func (c *CIF) getSchedules( uid string ) ( []*Schedule, error ) {
-  var ar []*Schedule
-
-  // Retrieve the existing entry (if any)
-  b := c.schedule.Get( []byte( uid ) )
-  if b != nil {
-    codec := codec.NewBinaryCodecFrom( b )
-
-    var l int16
-    codec.ReadInt16( &l )
-    for i := 0; i < int(l); i++ {
-      var sched *Schedule = &Schedule{}
-      codec.Read( sched )
-      ar = append( ar, sched )
-    }
-
-    if codec.Error() != nil {
-      return nil, codec.Error()
-    }
-  }
-
-  return ar, nil
-}
-
-func (c *CIF) putSchedules( uid string, ar []*Schedule ) error {
-  codec := codec.NewBinaryCodec()
-
-  codec.WriteInt32( int32( len( ar ) ) )
-  for _, s := range ar {
-    codec.Write( s )
-  }
-
-  if codec.Error() != nil {
-    return codec.Error()
-  }
-
-  return c.schedule.Put( []byte( uid ), codec.Bytes() )
+  return nil
 }
 
 func (c *CIF) deleteSchedule( s *Schedule ) error {
 
-  ar, _ := c.getSchedules( s.TrainUID )
+  key := []byte( s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator )
 
-  // Form a new slice without the schedule
-  var n []*Schedule
-  for _, e := range ar {
-    if !s.Equals( e ) {
-      n = append( n, e )
-    }
-  }
-
-  // Persist or delete if the new slice is empty
-  if len( n ) > 0 {
-    return c.putSchedules( s.TrainUID, ar )
-  } else {
-    return c.schedule.Delete( []byte( s.TrainUID ) )
-  }
-
-  return nil
+  return c.schedule.Delete( key )
 }

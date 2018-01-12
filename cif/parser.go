@@ -137,6 +137,7 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
   log.Println( "Parsing Tiploc's" )
 
   var lastLine string
+  rebuildRequired := false
 
   // Now run the rest of the import
   if err := c.db.Update( func( tx *bolt.Tx ) error {
@@ -150,6 +151,8 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
       } else if bail {
         lastLine = line
         return nil
+      } else {
+        rebuildRequired = true
       }
     }
 
@@ -158,17 +161,19 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
     return "", err
   }
 
-  // Now rebuild the Tiploc based buckets
-  if err := c.db.Update( func( tx *bolt.Tx ) error {
-    c.parserInit( tx )
+  // Now rebuild the Tiploc based buckets if necessary
+  if rebuildRequired {
+    if err := c.db.Update( func( tx *bolt.Tx ) error {
+      c.parserInit( tx )
 
-    if err := c.cleanupStanox(); err != nil {
-      return err
-    }
+      if err := c.cleanupStanox(); err != nil {
+        return err
+      }
 
-    return c.cleanupCRS()
-  }); err != nil {
-    return "", err
+      return c.cleanupCRS()
+      }); err != nil {
+        return "", err
+      }
   }
 
   return lastLine, nil
