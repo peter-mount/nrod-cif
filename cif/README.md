@@ -1,6 +1,6 @@
 # cif
 --
-    import "cif"
+    import "github.com/peter-mount/nrod-cif/cif"
 
 A GO library providing a database based on the Network Rail CIF Timetable feed.
 

@@ -13,5 +13,5 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-# Local copy of data not included in git
-/data
+# Generated documentation, not to be committed
+docs
