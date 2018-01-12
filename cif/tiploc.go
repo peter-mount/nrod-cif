@@ -5,6 +5,7 @@ import (
   "fmt"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
+  "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
@@ -23,7 +24,7 @@ type Tiploc struct {
   DateOfExtract   time.Time
 }
 
-func (t *Tiploc) Write( c *BinaryCodec ) {
+func (t *Tiploc) Write( c *codec.BinaryCodec ) {
   c.WriteString( t.Tiploc ).
     WriteInt( t.NLC ).
     WriteString( t.NLCCheck ).
@@ -34,7 +35,7 @@ func (t *Tiploc) Write( c *BinaryCodec ) {
     WriteTime( t.DateOfExtract )
 }
 
-func (t *Tiploc) Read( c *BinaryCodec ) {
+func (t *Tiploc) Read( c *codec.BinaryCodec ) {
   c.ReadString( &t.Tiploc ).
     ReadInt( &t.NLC ).
     ReadString( &t.NLCCheck ).
@@ -65,7 +66,7 @@ func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
     return nil, false
   }
 
-  NewBinaryCodecFrom( b ).Read( tiploc )
+  codec.NewBinaryCodecFrom( b ).Read( tiploc )
   if tiploc.Tiploc == "" {
     return nil, false
   }

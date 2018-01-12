@@ -1,5 +1,9 @@
 package cif
 
+import (
+  "github.com/peter-mount/golib/codec"
+)
+
 func (c *CIF) parseTA( l string ) error {
   var t Tiploc = Tiploc{}
   i := 2
@@ -22,7 +26,7 @@ func (c *CIF) parseTA( l string ) error {
 
     var ot Tiploc
     if( b != nil ) {
-      NewBinaryCodecFrom( b ).Read( &ot )
+      codec.NewBinaryCodecFrom( b ).Read( &ot )
     }
 
     if t.Tiploc == ot.Tiploc && c.importhd.DateOfExtract.After( ot.DateOfExtract) {

@@ -6,6 +6,7 @@ import (
   bolt "github.com/coreos/bbolt"
   "errors"
   "fmt"
+  "github.com/peter-mount/golib/codec"
   "log"
   "time"
 )
@@ -23,7 +24,7 @@ type HD struct {
   // Spare 20
 }
 
-func (h *HD) Write( c *BinaryCodec ) {
+func (h *HD) Write( c *codec.BinaryCodec ) {
   c.WriteString( h.Id ).
     WriteString( h.FileMainframeIdentity ).
     WriteTime( h.DateOfExtract ).
@@ -35,7 +36,7 @@ func (h *HD) Write( c *BinaryCodec ) {
     WriteTime( h.UserEndDate )
 }
 
-func (h *HD) Read( c *BinaryCodec ) {
+func (h *HD) Read( c *codec.BinaryCodec ) {
   c.ReadString( &h.Id ).
     ReadString( &h.FileMainframeIdentity ).
     ReadTime( &h.DateOfExtract ).
@@ -54,7 +55,7 @@ func (c *CIF) GetHD() ( *HD, error ) {
 
     b := tx.Bucket( []byte("Meta") ).Get( []byte( "lastCif" ) )
     if b != nil {
-      NewBinaryCodecFrom( b ).Read( h )
+      codec.NewBinaryCodecFrom( b ).Read( h )
     }
     return nil
   }); err != nil {

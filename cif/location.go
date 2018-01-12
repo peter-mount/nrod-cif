@@ -1,5 +1,9 @@
 package cif
 
+import (
+  "github.com/peter-mount/golib/codec"
+)
+
 type Location struct {
   // LO,
   Id          string
@@ -26,7 +30,7 @@ type Location struct {
   PerfAllow   string
 }
 
-func (l *Location) Write( c *BinaryCodec ) {
+func (l *Location) Write( c *codec.BinaryCodec ) {
   c.WriteString( l.Id ).
     WriteString( l.Location ).
     WriteString( l.Tiploc ).
@@ -44,7 +48,7 @@ func (l *Location) Write( c *BinaryCodec ) {
     WriteString( l.PerfAllow )
 }
 
-func (l *Location) Read( c *BinaryCodec ) {
+func (l *Location) Read( c *codec.BinaryCodec ) {
   c.ReadString( &l.Id ).
     ReadString( &l.Location ).
     ReadString( &l.Tiploc ).

@@ -4,6 +4,7 @@ import (
   "encoding/json"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
+  "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
@@ -26,7 +27,7 @@ func (c *CIF) cleanupStanox() error {
 
   if err := c.tiploc.ForEach( func( k, v []byte) error {
     var tiploc *Tiploc = &Tiploc{}
-    NewBinaryCodecFrom( v ).Read( tiploc )
+    codec.NewBinaryCodecFrom( v ).Read( tiploc )
 
     if tiploc.Stanox > 0 {
       stanox[ tiploc.Stanox ] = append( stanox[ tiploc.Stanox ], tiploc )
@@ -52,7 +53,7 @@ func (c *CIF) cleanupStanox() error {
       for _, t := range s {
         if t.CRS != crs {
           t.CRS = crs
-          codec := NewBinaryCodec()
+          codec := codec.NewBinaryCodec()
           codec.Write( t )
           if codec.Error() != nil {
             return codec.Error()
@@ -82,7 +83,7 @@ func (c *CIF) cleanupStanox() error {
       ar = append( ar, t.Tiploc )
     }
 
-    codec := NewBinaryCodec()
+    codec := codec.NewBinaryCodec()
     codec.WriteStringArray( ar )
     if codec.Error() != nil {
       return codec.Error()
@@ -104,7 +105,7 @@ func (c *CIF) GetStanox( tx *bolt.Tx, stanox int ) ( []*Tiploc, bool ) {
   }
 
   var ar []string
-  NewBinaryCodecFrom( b ).ReadStringArray( &ar )
+  codec.NewBinaryCodecFrom( b ).ReadStringArray( &ar )
 
   if len( ar ) == 0 {
     return nil, false

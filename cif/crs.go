@@ -4,6 +4,7 @@ import (
   "encoding/json"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
+  "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/statistics"
   "log"
   "net/http"
@@ -25,7 +26,7 @@ func (c *CIF) cleanupCRS() error {
 
   if err := c.tiploc.ForEach( func( k, v []byte) error {
     var tiploc *Tiploc = &Tiploc{}
-    NewBinaryCodecFrom( v ).Read( tiploc )
+    codec.NewBinaryCodecFrom( v ).Read( tiploc )
 
     if tiploc.CRS != "" {
       crs[ tiploc.CRS ] = append( crs[ tiploc.CRS ], tiploc )
@@ -54,7 +55,7 @@ func (c *CIF) cleanupCRS() error {
       ar = append( ar, t.Tiploc )
     }
 
-    codec := NewBinaryCodec()
+    codec := codec.NewBinaryCodec()
     codec.WriteStringArray( ar )
     if codec.Error() != nil {
       return codec.Error()
@@ -76,7 +77,7 @@ func (c *CIF) GetCRS( tx *bolt.Tx, crs string ) ( []*Tiploc, bool ) {
   }
 
   var ar []string
-  NewBinaryCodecFrom( b ).ReadStringArray( &ar )
+  codec.NewBinaryCodecFrom( b ).ReadStringArray( &ar )
 
   if len( ar ) == 0 {
     return nil, false

@@ -2,6 +2,7 @@ package cif
 
 import (
   "fmt"
+  "github.com/peter-mount/golib/codec"
 )
 
 // Public Timetable time
@@ -10,11 +11,11 @@ type PublicTime struct {
   T int
 }
 
-func (t PublicTime) Write( c *BinaryCodec ) {
+func (t PublicTime) Write( c *codec.BinaryCodec ) {
   c.WriteInt32( int32( t.T ) )
 }
 
-func (t PublicTime) Read( c *BinaryCodec ) {
+func (t PublicTime) Read( c *codec.BinaryCodec ) {
   var i int32
   c.ReadInt32( &i )
   t.T = int(i)
@@ -45,11 +46,11 @@ type WorkingTime struct {
   T int
 }
 
-func (t WorkingTime) Write( c *BinaryCodec ) {
+func (t WorkingTime) Write( c *codec.BinaryCodec ) {
   c.WriteInt32( int32( t.T ) )
 }
 
-func (t WorkingTime) Read( c *BinaryCodec ) {
+func (t WorkingTime) Read( c *codec.BinaryCodec ) {
   var i int32
   c.ReadInt32( &i )
   t.T = int(i)

@@ -2,6 +2,7 @@ package cif
 
 import (
   "fmt"
+  "github.com/peter-mount/golib/codec"
   "time"
 )
 
@@ -38,7 +39,7 @@ type Schedule struct {
   DateOfExtract             time.Time
 }
 
-func ( s *Schedule) Write( c *BinaryCodec ) {
+func ( s *Schedule) Write( c *codec.BinaryCodec ) {
   c.WriteString( s.TrainUID ).
     WriteTime( s.RunsFrom ).
     WriteTime( s.RunsTo ).
@@ -71,7 +72,7 @@ func ( s *Schedule) Write( c *BinaryCodec ) {
   }
 }
 
-func ( s *Schedule) Read( c *BinaryCodec ) {
+func ( s *Schedule) Read( c *codec.BinaryCodec ) {
   c.ReadString( &s.TrainUID ).
     ReadTime( &s.RunsFrom ).
     ReadTime( &s.RunsTo ).
@@ -160,7 +161,7 @@ func (c *CIF) getSchedules( uid string ) ( []*Schedule, error ) {
   // Retrieve the existing entry (if any)
   b := c.schedule.Get( []byte( uid ) )
   if b != nil {
-    codec := NewBinaryCodecFrom( b )
+    codec := codec.NewBinaryCodecFrom( b )
 
     var l int16
     codec.ReadInt16( &l )
@@ -179,7 +180,7 @@ func (c *CIF) getSchedules( uid string ) ( []*Schedule, error ) {
 }
 
 func (c *CIF) putSchedules( uid string, ar []*Schedule ) error {
-  codec := NewBinaryCodec()
+  codec := codec.NewBinaryCodec()
 
   codec.WriteInt32( int32( len( ar ) ) )
   for _, s := range ar {

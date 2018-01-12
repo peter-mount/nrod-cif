@@ -1,5 +1,9 @@
 package cif
 
+import (
+  "github.com/peter-mount/golib/codec"
+)
+
 func (c *CIF) parseZZ() error {
 
     // Save last schedule
@@ -8,7 +12,7 @@ func (c *CIF) parseZZ() error {
     }
 
     // Finally update header to this imported one
-    codec := NewBinaryCodec()
+    codec := codec.NewBinaryCodec()
     codec.Write( c.importhd )
     if codec.Error() != nil {
       return codec.Error()

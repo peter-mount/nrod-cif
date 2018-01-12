@@ -1,5 +1,9 @@
 package cif
 
+import (
+  "github.com/peter-mount/golib/codec"
+)
+
 func (c *CIF) parseTI( l string ) error {
   var t Tiploc = Tiploc{}
   i := 2
@@ -27,13 +31,13 @@ func (c *CIF) putTiploc( t *Tiploc ) error {
 
   var e Tiploc
   if( b != nil ) {
-    NewBinaryCodecFrom( b ).Read( &e )
+    codec.NewBinaryCodecFrom( b ).Read( &e )
   }
 
   // If we don't have an entry or this one is newer then persist
   if t.Tiploc != e.Tiploc || t.DateOfExtract.After( e.DateOfExtract ) {
     //return c.put( c.tiploc, t.Tiploc, &t )
-    codec := NewBinaryCodec()
+    codec := codec.NewBinaryCodec()
     codec.Write( t )
     if codec.Error() != nil {
       return codec.Error()
