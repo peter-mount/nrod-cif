@@ -7,7 +7,7 @@ import (
 func (c *CIF) parseLT( l string ) error {
   s := c.curSchedule
 
-  var loc *Location = newLocation()
+  var loc *Location = &Location{}
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 

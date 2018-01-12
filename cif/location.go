@@ -14,7 +14,9 @@ import (
 // "LT" Destination: always the last lcoation in a schedule
 //
 // For most purposes you would be interested in the Tiploc, Pta, Ptd and Platform
-// fields. Tiploc is the name of this location.
+// fields.
+//
+// Tiploc is the name of this location.
 //
 // Pta & Ptd are the public timetable times, i.e. what is published to the general public.
 //
@@ -30,45 +32,46 @@ import (
 // not be set.
 type Location struct {
   // Type of location:
-  Id          string
+  Id          string        `json:"-"`
   // Location including Suffix (for circular routes)
   // This is guaranteed to be unique per schedule, although for most purposes
   // like display you would use Tiploc
-  Location    string
+  Location    string        `json:"-"`
   // Tiploc of this location. For some schedules like circular routes this can
   // appear more than once in a schedule.
   Tiploc      string
   // Public Timetable
-  Pta         PublicTime
-  Ptd         PublicTime
+  Pta        *PublicTime    `json:",omitempty"`
+  Ptd        *PublicTime    `json:",omitempty"`
   // Working Timetable
-  Wta         WorkingTime
-  Wtd         WorkingTime
-  Wtp         WorkingTime
+  Wta        *WorkingTime   `json:",omitempty"`
+  Wtd        *WorkingTime   `json:",omitempty"`
+  Wtp        *WorkingTime   `json:",omitempty"`
   // Platform
-  Platform    string
+  Platform    string        `json:",omitempty"`
   // Activity up to 6 codes
-  Activity  []string
+  Activity  []string        `json:",omitempty"`
   // The Line the train will take
-  Line        string
+  Line        string        `json:",omitempty"`
   // The Path the train will take
-  Path        string
+  Path        string        `json:",omitempty"`
   // Allowances at this location
-  EngAllow    string
-  PathAllow   string
-  PerfAllow   string
+  EngAllow    string        `json:",omitempty"`
+  PathAllow   string        `json:",omitempty"`
+  PerfAllow   string        `json:",omitempty"`
 }
 
+// BinaryCodec writer
 func (l *Location) Write( c *codec.BinaryCodec ) {
   c.WriteString( l.Id ).
     WriteString( l.Location ).
-    WriteString( l.Tiploc ).
-    Write( &l.Pta ).
-    Write( &l.Ptd ).
-    Write( &l.Wta ).
-    Write( &l.Wtd ).
-    Write( &l.Wtp ).
-    WriteString( l.Platform ).
+    WriteString( l.Tiploc )
+  PublicTimeWrite( c, l.Pta )
+  PublicTimeWrite( c, l.Ptd )
+  WorkingTimeWrite( c, l.Wta )
+  WorkingTimeWrite( c, l.Wtd )
+  WorkingTimeWrite( c, l.Wtp )
+  c.WriteString( l.Platform ).
     WriteStringArray( l.Activity ).
     WriteString( l.Line ).
     WriteString( l.Path ).
@@ -77,32 +80,23 @@ func (l *Location) Write( c *codec.BinaryCodec ) {
     WriteString( l.PerfAllow )
 }
 
+// BinaryCodec reader
 func (l *Location) Read( c *codec.BinaryCodec ) {
   c.ReadString( &l.Id ).
     ReadString( &l.Location ).
-    ReadString( &l.Tiploc ).
-    Read( &l.Pta ).
-    Read( &l.Ptd ).
-    Read( &l.Wta ).
-    Read( &l.Wtd ).
-    Read( &l.Wtp ).
-    ReadString( &l.Platform ).
+    ReadString( &l.Tiploc )
+  l.Pta = PublicTimeRead( c )
+  l.Ptd = PublicTimeRead( c )
+  l.Wta = WorkingTimeRead( c )
+  l.Wtd = WorkingTimeRead( c )
+  l.Wtp = WorkingTimeRead( c )
+  c.ReadString( &l.Platform ).
     ReadStringArray( &l.Activity ).
     ReadString( &l.Line ).
     ReadString( &l.Path ).
     ReadString( &l.EngAllow ).
     ReadString( &l.PathAllow ).
     ReadString( &l.PerfAllow )
-}
-
-func newLocation() *Location {
-  var loc *Location = &Location{}
-  loc.Pta.Set( -1 )
-  loc.Ptd.Set( -1 )
-  loc.Wta.Set( -1 )
-  loc.Wtd.Set( -1 )
-  loc.Wtp.Set( -1 )
-  return loc
 }
 
 func (s *Schedule) appendLocation(l *Location) {

@@ -29,6 +29,22 @@ const (
 )
 ```
 
+#### func  PublicTimeWrite
+
+```go
+func PublicTimeWrite(c *codec.BinaryCodec, t *PublicTime)
+```
+PublicTimeWrite is a workaround for writing null times. If the pointer is null
+then a time is written where IsZero()==true
+
+#### func  WorkingTimeWrite
+
+```go
+func WorkingTimeWrite(c *codec.BinaryCodec, t *WorkingTime)
+```
+WorkingTimeWrite is a workaround for writing null times. If the pointer is null
+then a time is written where IsZero()==true
+
 #### type CIF
 
 ```go
@@ -316,33 +332,33 @@ func (h *HD) Write(c *codec.BinaryCodec)
 ```go
 type Location struct {
 	// Type of location:
-	Id string
+	Id string `json:"-"`
 	// Location including Suffix (for circular routes)
 	// This is guaranteed to be unique per schedule, although for most purposes
 	// like display you would use Tiploc
-	Location string
+	Location string `json:"-"`
 	// Tiploc of this location. For some schedules like circular routes this can
 	// appear more than once in a schedule.
 	Tiploc string
 	// Public Timetable
-	Pta PublicTime
-	Ptd PublicTime
+	Pta *PublicTime `json:",omitempty"`
+	Ptd *PublicTime `json:",omitempty"`
 	// Working Timetable
-	Wta WorkingTime
-	Wtd WorkingTime
-	Wtp WorkingTime
+	Wta *WorkingTime `json:",omitempty"`
+	Wtd *WorkingTime `json:",omitempty"`
+	Wtp *WorkingTime `json:",omitempty"`
 	// Platform
-	Platform string
+	Platform string `json:",omitempty"`
 	// Activity up to 6 codes
-	Activity []string
+	Activity []string `json:",omitempty"`
 	// The Line the train will take
-	Line string
+	Line string `json:",omitempty"`
 	// The Path the train will take
-	Path string
+	Path string `json:",omitempty"`
 	// Allowances at this location
-	EngAllow  string
-	PathAllow string
-	PerfAllow string
+	EngAllow  string `json:",omitempty"`
+	PathAllow string `json:",omitempty"`
+	PerfAllow string `json:",omitempty"`
 }
 ```
 
@@ -356,7 +372,9 @@ location, defined by the Id field:
 "LT" Destination: always the last lcoation in a schedule
 
 For most purposes you would be interested in the Tiploc, Pta, Ptd and Platform
-fields. Tiploc is the name of this location.
+fields.
+
+Tiploc is the name of this location.
 
 Pta & Ptd are the public timetable times, i.e. what is published to the general
 public.
@@ -377,22 +395,32 @@ set.
 ```go
 func (l *Location) Read(c *codec.BinaryCodec)
 ```
+BinaryCodec reader
 
 #### func (*Location) Write
 
 ```go
 func (l *Location) Write(c *codec.BinaryCodec)
 ```
+BinaryCodec writer
 
 #### type PublicTime
 
 ```go
 type PublicTime struct {
-	T int
 }
 ```
 
 Public Timetable time Note: 00:00 is not possible as in CIF that means no-time
+
+#### func  PublicTimeRead
+
+```go
+func PublicTimeRead(c *codec.BinaryCodec) *PublicTime
+```
+PublicTimeRead is a workaround issue where a custom type cannot be omitempty in
+JSON unless it's a nil So instead of using BinaryCodec.Read( v ), we call this &
+set the return value in the struct as a pointer.
 
 #### func (*PublicTime) Get
 
@@ -401,18 +429,26 @@ func (t *PublicTime) Get() int
 ```
 Get returns the PublicTime in seconds of the day
 
-#### func (*PublicTime) IsSet
+#### func (*PublicTime) IsZero
 
 ```go
-func (t *PublicTime) IsSet() bool
+func (t *PublicTime) IsZero() bool
 ```
-IsSet returns true if the time is set
+IsZero returns true if the time is not present
 
-#### func (PublicTime) Read
+#### func (*PublicTime) MarshalJSON
 
 ```go
-func (t PublicTime) Read(c *codec.BinaryCodec)
+func (t *PublicTime) MarshalJSON() ([]byte, error)
 ```
+Custom JSON Marshaler. This will write null or the time as "HH:MM"
+
+#### func (*PublicTime) Read
+
+```go
+func (t *PublicTime) Read(c *codec.BinaryCodec)
+```
+BinaryCodec reader
 
 #### func (*PublicTime) Set
 
@@ -428,11 +464,19 @@ func (t *PublicTime) String() string
 ```
 String returns a PublicTime in HH:MM format or 5 blank spaces if it's not set.
 
-#### func (PublicTime) Write
+#### func (*PublicTime) UnmarshalJSON
 
 ```go
-func (t PublicTime) Write(c *codec.BinaryCodec)
+func (t *PublicTime) UnmarshalJSON(data []byte) error
 ```
+Custom JSON Unmarshaler
+
+#### func (*PublicTime) Write
+
+```go
+func (t *PublicTime) Write(c *codec.BinaryCodec)
+```
+BinaryCodec writer
 
 #### type Schedule
 
@@ -574,12 +618,20 @@ func (t *Tiploc) Write(c *codec.BinaryCodec)
 
 ```go
 type WorkingTime struct {
-	T int
 }
 ```
 
 Working Timetable time. WorkingTime is similar to PublciTime, except we can have
 seconds. In the Working Timetable, the seconds can be either 0 or 30.
+
+#### func  WorkingTimeRead
+
+```go
+func WorkingTimeRead(c *codec.BinaryCodec) *WorkingTime
+```
+WorkingTimeRead is a workaround issue where a custom type cannot be omitempty in
+JSON unless it's a nil So instead of using BinaryCodec.Read( v ), we call this &
+set the return value in the struct as a pointer.
 
 #### func (*WorkingTime) Get
 
@@ -588,18 +640,26 @@ func (t *WorkingTime) Get() int
 ```
 Get returns the WorkingTime in seconds of the day
 
-#### func (*WorkingTime) IsSet
+#### func (*WorkingTime) IsZero
 
 ```go
-func (t *WorkingTime) IsSet() bool
+func (t *WorkingTime) IsZero() bool
 ```
-IsSet returns true if the time is set
+IsZero returns true if the time is not present
 
-#### func (WorkingTime) Read
+#### func (*WorkingTime) MarshalJSON
 
 ```go
-func (t WorkingTime) Read(c *codec.BinaryCodec)
+func (t *WorkingTime) MarshalJSON() ([]byte, error)
 ```
+Custom JSON Marshaler. This will write null or the time as "HH:MM:SS"
+
+#### func (*WorkingTime) Read
+
+```go
+func (t *WorkingTime) Read(c *codec.BinaryCodec)
+```
+BinaryCodec reader
 
 #### func (*WorkingTime) Set
 
@@ -616,8 +676,16 @@ func (t *WorkingTime) String() string
 String returns a PublicTime in HH:MM:SS format or 8 blank spaces if it's not
 set.
 
-#### func (WorkingTime) Write
+#### func (*WorkingTime) UnmarshalJSON
 
 ```go
-func (t WorkingTime) Write(c *codec.BinaryCodec)
+func (t *WorkingTime) UnmarshalJSON(data []byte) error
 ```
+Custom JSON Unmarshaler
+
+#### func (*WorkingTime) Write
+
+```go
+func (t *WorkingTime) Write(c *codec.BinaryCodec)
+```
+BinaryCodec writer
