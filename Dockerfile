@@ -20,6 +20,7 @@ RUN go get -v \
       github.com/peter-mount/golib/codec \
       github.com/peter-mount/golib/statistics \
       github.com/peter-mount/golib/util \
+      github.com/robertkrimen/godocdown/godocdown \
       gopkg.in/robfig/cron.v2 \
       gopkg.in/yaml.v2 \
       io/ioutil \
@@ -36,6 +37,11 @@ ADD . .
 # Now each binary
 RUN go build -v -x \
       -o /dest/bin/cifserver bin/cifserver
+
+# Generate documentation
+RUN mkdir -p /dest/doc &&\
+    godoc     cif >/dest/doc/cif.txt &&\
+    godocdown cif >/dest/doc/cif.md
 
 # Finally build the final runtime container will all required files
 FROM scratch

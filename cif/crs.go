@@ -69,6 +69,7 @@ func (c *CIF) cleanupCRS() error {
   return nil
 }
 
+// GetCRS retrieves an array of Tiploc records for the CRS/3Alpha code of a station.
 func (c *CIF) GetCRS( tx *bolt.Tx, crs string ) ( []*Tiploc, bool ) {
 
   b := tx.Bucket( []byte("Crs") ).Get( []byte( crs ) )
@@ -93,6 +94,14 @@ func (c *CIF) GetCRS( tx *bolt.Tx, crs string ) ( []*Tiploc, bool ) {
   return t, len( t ) > 0
 }
 
+// CRSHandler implements a net/http handler that implements a simple Rest service to retrieve CRS/3Alpha records.
+// The handler must have {id} set in the path for this to work, where id would represent the CRS code.
+//
+// For example:
+//
+// router.HandleFunc( "/crs/{id}", db.CRSHandler ).Methods( "GET" )
+//
+// where db is a pointer to an active CIF struct. When running this would allow GET requests like /crs/MDE to return JSON representing that station.
 func (c *CIF) CRSHandler( w http.ResponseWriter, r *http.Request ) {
   var params = mux.Vars( r )
 

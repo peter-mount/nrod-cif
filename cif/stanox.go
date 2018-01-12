@@ -121,6 +121,14 @@ func (c *CIF) GetStanox( tx *bolt.Tx, stanox int ) ( []*Tiploc, bool ) {
   return t, len( t ) > 0
 }
 
+// StanoxHandler implements a net/http handler that implements a simple Rest service to retrieve stanox records.
+// The handler must have {id} set in the path for this to work, where id would represent the CRS code.
+//
+// For example:
+//
+// router.HandleFunc( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
+//
+// where db is a pointer to an active CIF struct. When running this would allow GET requests like /stanox/89403 to return JSON representing that station.
 func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
   var params = mux.Vars( r )
 

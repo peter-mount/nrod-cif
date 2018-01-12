@@ -1,5 +1,3 @@
-// CIF HD Record
-
 package cif
 
 import (
@@ -12,16 +10,20 @@ import (
 )
 
 type HD struct {
-  Id                      string    // 02 Record Identity, always "HD"
-  FileMainframeIdentity   string    // 20
-  DateOfExtract           time.Time // 06 Date DDMMYY 060315, 04 Time HHMM
-  CurrentFileReference    string    // 07
-  LastFileReference       string    // 07
-  Update                  bool      // 01 U = Update = true, F = Full Extract = false
-  Version                 string    // 01
-  UserStartDate           time.Time // 06 DDMMYY
-  UserEndDate             time.Time // 06 DDMMYY
-  // Spare 20
+  Id                      string    // Record Identity, always "HD"
+  FileMainframeIdentity   string
+  // The date that the most recent cif file imported was extracted from Network Rail
+  DateOfExtract           time.Time
+  CurrentFileReference    string
+  LastFileReference       string
+  // Was the last import an update or a full import
+  Update                  bool
+  Version                 string
+  // The Start and End dates for schedules in the latest import.
+  // You can be assured that there would be no schedules which are not contained
+  // either fully or partially inside these dates to be present.
+  UserStartDate           time.Time
+  UserEndDate             time.Time
 }
 
 func (h *HD) Write( c *codec.BinaryCodec ) {
@@ -48,6 +50,7 @@ func (h *HD) Read( c *codec.BinaryCodec ) {
     ReadTime( &h.UserEndDate )
 }
 
+// GetHD retrieves the latest HD record of the latest cif file imported into the database.
 func (c *CIF) GetHD() ( *HD, error ) {
   var h *HD = &HD{}
 
@@ -103,6 +106,7 @@ func (c *CIF) parseHD( l string ) error {
   return nil
 }
 
+// String returns a human readable version of the HD record.
 func (h *HD ) String() string {
   return fmt.Sprintf(
     "CIF %s Extracted %v Date Range %v - %v Update %v",

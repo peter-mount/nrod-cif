@@ -12,13 +12,20 @@ import (
   "time"
 )
 
+// Tiploc represents a location on the rail network.
+// This can be either a station, a junction or a specific point along the line/
 type Tiploc struct {
+  // Tiploc key for this location
   Tiploc          string
   NLC             int
   NLCCheck        string
+  // Proper description for this location
   Desc            string
+  // Stannox code, 0 means none
   Stanox          int
+  // CRS code, "" for none. Codes starting with X or Z are usually not stations.
   CRS             string
+  // NLC description of the location
   NLCDesc         string
   // The CIF extract this entry is from
   DateOfExtract   time.Time
@@ -46,6 +53,7 @@ func (t *Tiploc) Read( c *codec.BinaryCodec ) {
     ReadTime( &t.DateOfExtract )
 }
 
+// String returns a human readable version of a Tiploc
 func (t *Tiploc) String() string {
   return fmt.Sprintf(
     "Tiploc[%s, crs=%s, stanox=%05d, nlc=%d, desc=%s, nlcDesc=%s]",
@@ -57,6 +65,16 @@ func (t *Tiploc) String() string {
     t.NLCDesc )
 }
 
+// GetTiploc retrieves a Tiploc from the cif database
+//
+// tx An active readonly bolt.Tx
+//
+// t The Tiploc to retrieve, 1..7 characters long, always upper case
+//
+// Returns ( tiploc *Tiploc, exist bool )
+//
+// If exist is true then tiploc will be a new Tiploc instance with the retrieved data.
+// If false then the tiploc is not in the database.
 func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
 
   var tiploc *Tiploc = &Tiploc{}
@@ -74,6 +92,14 @@ func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
   return tiploc, true
 }
 
+// TiplocHandler implements a net/http handler that implements a simple Rest service to retrieve Tiploc records.
+// The handler must have {id} set in the path for this to work, where id would represent the Tiploc code.
+//
+// For example:
+//
+// router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
+//
+// where db is a pointer to an active CIF struct. When running this would allow GET requests like /tiploc/MSTONEE to return JSON representing that station.
 func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
   var params = mux.Vars( r )
 

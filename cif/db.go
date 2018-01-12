@@ -1,4 +1,3 @@
-// CIF Rest server
 package cif
 
 import (
@@ -8,7 +7,7 @@ import (
   "time"
 )
 
-// Open a database
+// OpenDB opens a CIF database.
 func (c *CIF) OpenDB( dbFile string ) error {
   if c.db != nil {
     return errors.New( "CIF Already attached to a Database" )
@@ -24,7 +23,7 @@ func (c *CIF) OpenDB( dbFile string ) error {
   }
 }
 
-// Use an existing database
+// UseDB Allows an already open database to be used with cif.
 func (c *CIF) UseDB( db *bolt.DB ) error {
   if c.db != nil {
     return errors.New( "CIF Already attached to a Database" )

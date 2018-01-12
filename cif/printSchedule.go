@@ -1,5 +1,3 @@
-// Debug function to return a schedule as a String
-// Unlike String() this returns the full schedule
 package cif
 
 import (
@@ -7,6 +5,9 @@ import (
   "strings"
 )
 
+// FullString is a debug function that returns a Schedule as a string in a
+// human readable format.
+// Unlike String() this will contain everything about the schedule.
 func (s *Schedule) FullString() string {
   var b util.BufferWriter
 

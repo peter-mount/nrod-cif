@@ -1,4 +1,3 @@
-// NR CIF Parser
 package cif
 
 import (
@@ -10,6 +9,19 @@ import (
   "os"
 )
 
+// ImportFile imports a uncompressed CIF file retrieved from NetworkRail
+// into the cif database.
+// If this file is a full export then the database will be cleared first.
+//
+// The CIF.Mode field determines how this import is performed.
+// This field is a bitmask so one or more options can be included.
+// They are:
+//
+// TIPLOC   Import tiplocs
+//
+// SCHEDULE Import schedules
+//
+// ALL      Import everything, the default and the same as TIPLOC | SCHEDULE
 func (c *CIF) ImportFile( fname string ) error {
   file,err := os.Open( fname )
   if err != nil {
@@ -21,9 +33,22 @@ func (c *CIF) ImportFile( fname string ) error {
   return c.ImportCIF( file )
 }
 
+// ImportCIF imports a uncompressed CIF file retrieved from NetworkRail
+// into the cif database.
+// If this file is a full export then the database will be cleared first.
+//
+// The CIF.Mode field determines how this import is performed.
+// This field is a bitmask so one or more options can be included.
+// They are:
+//
+// TIPLOC   Import tiplocs
+//
+// SCHEDULE Import schedules
+//
+// ALL      Import everything, the default and the same as TIPLOC | SCHEDULE
 func (c *CIF) ImportCIF( r io.Reader ) error {
   scanner := bufio.NewScanner( r )
-  
+
   if err := c.parseFile( scanner ); err != nil {
     return err
   }

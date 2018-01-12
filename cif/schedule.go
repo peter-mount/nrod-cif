@@ -6,16 +6,22 @@ import (
   "time"
 )
 
+// A train schedule
 type Schedule struct {
-  // BS record
+  // The train UID
   TrainUID                  string
+  // The date range the schedule is valid on
   RunsFrom                  time.Time
   RunsTo                    time.Time
+  // The day's of the week the service will run
   DaysRun                   string
   BankHolRun                string
   Status                    string
   Category                  string
+  // The identity sometimes confusingly called the Headcode of the service.
+  // This is the value you would see in the nrod-td feed
   TrainIdentity             string
+  // The headcode of this service. Don't confuse with TrainIdentity above
   Headcode                  int
   ServiceCode               int
   PortionId                 string
@@ -28,9 +34,10 @@ type Schedule struct {
   Reservations              string
   CateringCode              string
   ServiceBranding           string
+  // The STP Indicator
   STPIndicator              string
-  // BX record
   UICCode                   int
+  // The operator of this service
   ATOCCode                  string
   ApplicableTimetable       bool
   // LO, LI & LT entries
@@ -108,6 +115,8 @@ func ( s *Schedule) Read( c *codec.BinaryCodec ) {
   }
 }
 
+// Equals returns true if two Schedule struts refer to the same schedule.
+// This checks the "primary key" for schedules which is TrainUID, RunsFrom & STPIndicator
 func (s *Schedule) Equals( o *Schedule ) bool {
   if o == nil {
     return false
@@ -115,6 +124,7 @@ func (s *Schedule) Equals( o *Schedule ) bool {
   return s.TrainUID == o.TrainUID && s.RunsFrom == o.RunsFrom && s.STPIndicator == o.STPIndicator
 }
 
+// String returns the "primary key" for schedules which is TrainUID, RunsFrom & STPIndicator
 func (s *Schedule) String() string {
   return fmt.Sprintf(
     "Schedule[uid=%s, from=%s, stp=%s]",

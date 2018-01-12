@@ -4,17 +4,44 @@ import (
   "github.com/peter-mount/golib/codec"
 )
 
+// A representation of a location within a schedule.
+// There are three types of location, defined by the Id field:
+//
+// "LO" Origin, always the first location in a schedule
+//
+// "LI" Intermediate: A stop or pass along the route
+//
+// "LT" Destination: always the last lcoation in a schedule
+//
+// For most purposes you would be interested in the Tiploc, Pta, Ptd and Platform
+// fields. Tiploc is the name of this location.
+//
+// Pta & Ptd are the public timetable times, i.e. what is published to the general public.
+//
+// Pta is the arrival time and is valid for LI & LT entries only.
+//
+// Ptd is the departue time and is valid for LO & LI entries only.
+//
+// If either are not set then the train is not scheduled to stop at this location.
+//
+// Wta, Wtd & Wtp are the working timetable, i.e. the actual timetable the
+// service runs to. Wta & Wtd are like Pta & Ptd but Wtp means the time the train
+// is scheduled to pass a location. If Wtp is set then Pta, Ptd, Wta & Wtp will
+// not be set.
 type Location struct {
-  // LO,
+  // Type of location:
   Id          string
   // Location including Suffix (for circular routes)
+  // This is guaranteed to be unique per schedule, although for most purposes
+  // like display you would use Tiploc
   Location    string
-  // Tiploc of Location sans Suffix
+  // Tiploc of this location. For some schedules like circular routes this can
+  // appear more than once in a schedule.
   Tiploc      string
-  // Public times in seconds of day
+  // Public Timetable
   Pta         PublicTime
   Ptd         PublicTime
-  // Working times in seconds of day
+  // Working Timetable
   Wta         WorkingTime
   Wtd         WorkingTime
   Wtp         WorkingTime
@@ -22,9 +49,11 @@ type Location struct {
   Platform    string
   // Activity up to 6 codes
   Activity  []string
-  // Misc
+  // The Line the train will take
   Line        string
+  // The Path the train will take
   Path        string
+  // Allowances at this location
   EngAllow    string
   PathAllow   string
   PerfAllow   string
