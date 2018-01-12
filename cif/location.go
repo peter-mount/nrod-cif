@@ -63,11 +63,11 @@ func (l *Location) Write( c *codec.BinaryCodec ) {
   c.WriteString( l.Id ).
     WriteString( l.Location ).
     WriteString( l.Tiploc ).
-    Write( l.Pta ).
-    Write( l.Ptd ).
-    Write( l.Wta ).
-    Write( l.Wtd ).
-    Write( l.Wtp ).
+    Write( &l.Pta ).
+    Write( &l.Ptd ).
+    Write( &l.Wta ).
+    Write( &l.Wtd ).
+    Write( &l.Wtp ).
     WriteString( l.Platform ).
     WriteStringArray( l.Activity ).
     WriteString( l.Line ).
