@@ -3,44 +3,54 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
+  "errors"
   "log"
-  "os"
-  "os/signal"
-  "syscall"
   "time"
 )
 
-func OpenCIF( dbFile string ) ( *CIF, error ) {
-
-  var c *CIF = &CIF{}
-
-  if boltdb, err := bolt.Open( dbFile, 0666, &bolt.Options{
-    Timeout: 5 * time.Second,
-    } ); err != nil {
-      return nil, err
-  } else {
-    c.db = boltdb
+// Open a database
+func (c *CIF) OpenDB( dbFile string ) error {
+  if c.db != nil {
+    return errors.New( "CIF Already attached to a Database" )
   }
 
-  // Listen to signals & close the db before exiting
-  // SIGINT for ^C, SIGTERM for docker stopping the container
-  sigs := make( chan os.Signal, 1 )
-  signal.Notify( sigs, syscall.SIGINT, syscall.SIGTERM )
-  go func() {
-    sig := <-sigs
-    log.Println( "Signal", sig )
-    c.db.Close()
-    log.Println( "Database closed" )
-    os.Exit( 0 )
-  }()
+  if db, err := bolt.Open( dbFile, 0666, &bolt.Options{
+    Timeout: 5 * time.Second,
+    } ); err != nil {
+      return err
+  } else {
+    c.allowClose = true
+    return c.useDB( db )
+  }
+}
+
+// Use an existing database
+func (c *CIF) UseDB( db *bolt.DB ) error {
+  if c.db != nil {
+    return errors.New( "CIF Already attached to a Database" )
+  }
+
+  c.allowClose = false
+  return c.useDB( db )
+}
+
+// common to OpenDB() && UseDB()
+func (c *CIF) useDB( db *bolt.DB ) error {
+
+  c.db = db
+
+  // Set the default mode for the parser
+  if ( c.Mode & ALL ) == 0 {
+    c.Mode = ALL
+  }
 
   // Now ensure the DB is initialised with the required buckets
   if err := c.initDB(); err != nil {
-    return nil, err
+    return err
   }
 
   if h, err := c.GetHD(); err != nil {
-    return nil, err
+    return err
   } else {
     c.header = h
 
@@ -51,14 +61,40 @@ func OpenCIF( dbFile string ) ( *CIF, error ) {
     }
   }
 
-  return c, nil
+  return nil
+
+}
+
+// Close the database.
+// If OpenDB() was used to open the db then that db is closed.
+// If UseDB() was used this simply detaches the CIF from that DB. The DB is not closed()
+func (c *CIF) Close() {
+
+  // Only close if we own the DB, e.g. via OpenDB()
+  if c.allowClose && c.db != nil {
+    c.db.Close()
+  }
+
+  // Detach
+  c.db = nil
 }
 
 // Ensures we have the appropriate buckets
 func (c *CIF) initDB() error {
+
+  buckets := []string { "Meta" }
+
+  if (c.Mode & TIPLOC) == TIPLOC {
+    buckets = append( buckets, "Tiploc", "Crs", "Stanox" )
+  }
+
+  if (c.Mode & SCHEDULE) == SCHEDULE {
+    buckets = append( buckets, "Schedule" )
+  }
+
   return c.db.Update( func( tx *bolt.Tx ) error {
 
-    for _, n := range []string { "Meta", "Tiploc", "Crs", "Stanox", "Schedule" } {
+    for _, n := range buckets {
       var nb []byte = []byte(n)
       if bucket := tx.Bucket( nb ); bucket == nil {
         log.Println( "Creating bucket", n )
@@ -79,18 +115,28 @@ func (c *CIF) clearBucket( bucket *bolt.Bucket ) error {
   })
 }
 
+// Used in full imports, clears the relevant buckets
 func (c *CIF) resetDB() error {
-  if err := c.clearBucket( c.tiploc ); err != nil {
-    return err
+
+  if (c.Mode & TIPLOC) == TIPLOC {
+    if err := c.clearBucket( c.tiploc ); err != nil {
+      return err
+    }
+
+    if err := c.clearBucket( c.crs ); err != nil {
+      return err
+    }
+
+    if err := c.clearBucket( c.stanox ); err != nil {
+      return err
+    }
   }
 
-  if err := c.clearBucket( c.crs ); err != nil {
-    return err
+  if (c.Mode & SCHEDULE) == SCHEDULE {
+    if err := c.clearBucket( c.schedule ); err != nil {
+      return err
+    }
   }
 
-  if err := c.clearBucket( c.stanox ); err != nil {
-    return err
-  }
-
-  return c.clearBucket( c.schedule )
+  return nil
 }

@@ -3,13 +3,14 @@ package cif
 
 import (
   "errors"
-  "bufio"
   bolt "github.com/coreos/bbolt"
+  "bufio"
+  "io"
   "log"
   "os"
 )
 
-func (c *CIF) Parse( fname string ) error {
+func (c *CIF) ImportFile( fname string ) error {
   file,err := os.Open( fname )
   if err != nil {
     return err
@@ -17,36 +18,61 @@ func (c *CIF) Parse( fname string ) error {
 
   defer file.Close()
 
-  scanner := bufio.NewScanner( file )
+  return c.ImportCIF( file )
+}
+
+func (c *CIF) ImportCIF( r io.Reader ) error {
+  scanner := bufio.NewScanner( r )
+  
   if err := c.parseFile( scanner ); err != nil {
     return err
   }
 
-  if err := scanner.Err(); err != nil {
-    return err
-  }
-
-  return nil
+  return scanner.Err()
 }
 
 func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
+  if c.Mode == 0 {
+    c.Mode = TIPLOC | SCHEDULE
+  }
+
+  var lastLine string
+
   // Parse the header in it's own tx. This may wipe the DB if its a full import
-  if err := c.parseFileHeader( scanner ); err != nil {
+  err := c.parseFileHeader( scanner )
+  if err != nil {
     return err
   }
 
-  // Now start with Tiplocs
-  return c.parseTiplocs( scanner )
+  if (c.Mode & TIPLOC) == TIPLOC {
+    lastLine, err = c.parseTiplocs( scanner )
+  }
+  if err != nil {
+    return err
+  }
+
+  if (c.Mode & SCHEDULE) == SCHEDULE {
+    err = c.parseSchedules( scanner, lastLine )
+  }
+
+  return err
 }
 
 // Sets the CIF structure up to the current transaction
 func (c *CIF) parserInit( tx *bolt.Tx ) {
   c.tx = tx
-  c.tiploc = tx.Bucket( []byte("Tiploc") )
-  c.crs = tx.Bucket( []byte("Crs") )
-  c.stanox = tx.Bucket( []byte("Stanox") )
-  c.schedule = tx.Bucket( []byte("Schedule") )
-  c.curSchedule = nil
+
+  if (c.Mode & TIPLOC) == TIPLOC {
+    c.tiploc = tx.Bucket( []byte("Tiploc") )
+    c.crs = tx.Bucket( []byte("Crs") )
+    c.stanox = tx.Bucket( []byte("Stanox") )
+  }
+
+  if (c.Mode & SCHEDULE) == SCHEDULE {
+    c.schedule = tx.Bucket( []byte("Schedule") )
+    c.curSchedule = nil
+  }
+
   c.update = false
 }
 
@@ -82,7 +108,7 @@ func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) error {
 }
 
 // Parses the rest of the file after the header
-func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
+func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
   log.Println( "Parsing Tiploc's" )
 
   var lastLine string
@@ -104,7 +130,7 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
 
     return nil
   }); err != nil {
-    return err
+    return "", err
   }
 
   // Now rebuild the Tiploc based buckets
@@ -117,11 +143,10 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) error {
 
     return c.cleanupCRS()
   }); err != nil {
-    return err
+    return "", err
   }
 
-  // Procede to the next block
-  return c.parseSchedules( scanner, lastLine )
+  return lastLine, nil
 }
 
 func (c *CIF) parseTiploc( line string ) ( bool, error ) {
