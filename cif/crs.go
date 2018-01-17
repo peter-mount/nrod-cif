@@ -2,6 +2,7 @@ package cif
 
 import (
   "encoding/json"
+  "encoding/xml"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
@@ -46,6 +47,8 @@ func (c *CIF) cleanupCRS() error {
       })
     }
   }
+
+  log.Println( "crs", len( crs ) )
 
   // Now persist
   for k, v := range crs {
@@ -111,7 +114,12 @@ func (c *CIF) CRSHandler( w http.ResponseWriter, r *http.Request ) {
     if ary, exists := c.GetCRS( tx, crs ); exists {
       statistics.Incr( "crs.200" )
       w.WriteHeader( 200 )
-      json.NewEncoder( w ).Encode( ary )
+
+      if r.Header.Get( "Accept" ) == "text/xml" {
+        xml.NewEncoder( w ).Encode( ary )
+      } else {
+        json.NewEncoder( w ).Encode( ary )
+      }
     } else {
       statistics.Incr( "crs.404" )
       w.WriteHeader( 404 )

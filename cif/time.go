@@ -2,9 +2,9 @@ package cif
 
 import (
   "encoding/json"
+  "encoding/xml"
   "fmt"
   "github.com/peter-mount/golib/codec"
-  "strconv"
 )
 
 // Public Timetable time
@@ -56,20 +56,12 @@ func (t *PublicTime) MarshalJSON() ( []byte, error ) {
   return json.Marshal( t.String() )
 }
 
-// Custom JSON Unmarshaler
-func (t *PublicTime) UnmarshalJSON( data []byte ) error {
-  var aux *string
-  if err := json.Unmarshal( data, &aux ); err != nil {
-    return err
+// Custom XML Marshaler.
+func (t *PublicTime) MarshalXMLAttr( name xml.Name ) ( xml.Attr, error ) {
+  if t.IsZero() {
+    return xml.Attr{}, nil
   }
-  if aux == nil {
-    t.t = -1
-  } else {
-      a, _ := strconv.Atoi( (*aux)[0:2] )
-      b, _ := strconv.Atoi( (*aux)[3:5] )
-      t.t = (a *3600) + (b * 60)
-  }
-  return nil
+  return xml.Attr{ Name: name, Value: t.String() }, nil
 }
 
 // String returns a PublicTime in HH:MM format or 5 blank spaces if it's not set.
@@ -146,21 +138,12 @@ func (t *WorkingTime) MarshalJSON() ( []byte, error ) {
   return json.Marshal( t.String() )
 }
 
-// Custom JSON Unmarshaler
-func (t *WorkingTime) UnmarshalJSON( data []byte ) error {
-  var aux *string
-  if err := json.Unmarshal( data, &aux ); err != nil {
-    return err
+// Custom XML Marshaler.
+func (t *WorkingTime) MarshalXMLAttr( name xml.Name ) ( xml.Attr, error ) {
+  if t.IsZero() {
+    return xml.Attr{}, nil
   }
-  if aux == nil {
-    t.t = -1
-  } else {
-    a, _ := strconv.Atoi( (*aux)[0:2] )
-    b, _ := strconv.Atoi( (*aux)[3:5] )
-    c, _ := strconv.Atoi( (*aux)[6:8] )
-    t.t = (a *3600) + (b * 60) + c
-  }
-  return nil
+  return xml.Attr{ Name: name, Value: t.String() }, nil
 }
 
 // String returns a PublicTime in HH:MM:SS format or 8 blank spaces if it's not set.

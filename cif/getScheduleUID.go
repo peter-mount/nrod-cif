@@ -4,6 +4,7 @@ import (
   bolt "github.com/coreos/bbolt"
   "bytes"
   "encoding/json"
+  "encoding/xml"
   "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/statistics"
@@ -50,7 +51,14 @@ func (c *CIF) ScheduleUIDHandler( w http.ResponseWriter, r *http.Request ) {
     if len( ary ) > 0 {
       statistics.Incr( "schedule.uid.200" )
       w.WriteHeader( 200 )
-      json.NewEncoder( w ).Encode( ary )
+
+      if r.Header.Get( "Accept" ) == "text/xml" {
+        // Wrap it in a schedules element
+        var ret schedules = schedules{ Schedules: ary }
+        xml.NewEncoder( w ).Encode( ret )
+      } else {
+        json.NewEncoder( w ).Encode( ary )
+      }
     } else {
       statistics.Incr( "schedule.uid.404" )
       w.WriteHeader( 404 )
@@ -62,4 +70,10 @@ func (c *CIF) ScheduleUIDHandler( w http.ResponseWriter, r *http.Request ) {
     statistics.Incr( "schedule.uid.500" )
     w.WriteHeader( 500 )
   }
+}
+
+// Wrapper used when writing the response as XML
+type schedules struct {
+    XMLName    xml.Name     `xml:"schedules"`
+    Schedules  []*Schedule  `xml:"schedule"`
 }

@@ -32,33 +32,33 @@ import (
 // not be set.
 type Location struct {
   // Type of location:
-  Id          string        `json:"-"`
+  Id          string        `json:"-" xml:"-"`
   // Location including Suffix (for circular routes)
   // This is guaranteed to be unique per schedule, although for most purposes
   // like display you would use Tiploc
-  Location    string        `json:"-"`
+  Location    string        `json:"-" xml:"-"`
   // Tiploc of this location. For some schedules like circular routes this can
   // appear more than once in a schedule.
-  Tiploc      string
+  Tiploc      string        `json:"tpl" xml:"tpl,attr"`
   // Public Timetable
-  Pta        *PublicTime    `json:",omitempty"`
-  Ptd        *PublicTime    `json:",omitempty"`
+  Pta        *PublicTime    `json:"pta,omitempty" xml:"pta,attr,omitempty"`
+  Ptd        *PublicTime    `json:"ptd,omitempty" xml:"ptd,attr,omitempty"`
   // Working Timetable
-  Wta        *WorkingTime   `json:",omitempty"`
-  Wtd        *WorkingTime   `json:",omitempty"`
-  Wtp        *WorkingTime   `json:",omitempty"`
+  Wta        *WorkingTime   `json:"wta,omitempty" xml:"wta,attr,omitempty"`
+  Wtd        *WorkingTime   `json:"wtd,omitempty" xml:"wtd,attr,omitempty"`
+  Wtp        *WorkingTime   `json:"wtp,omitempty" xml:"wtp,attr,omitempty"`
   // Platform
-  Platform    string        `json:",omitempty"`
+  Platform    string        `json:"plat,omitempty" xml:"plat,attr,omitempty"`
   // Activity up to 6 codes
-  Activity  []string        `json:",omitempty"`
+  Activity  []string        `json:"activity,omitempty" xml:"activity,omitempty"`
   // The Line the train will take
-  Line        string        `json:",omitempty"`
+  Line        string        `json:"line,omitempty" xml:"line,attr,omitempty"`
   // The Path the train will take
-  Path        string        `json:",omitempty"`
+  Path        string        `json:"path,omitempty" xml:"path,attr,omitempty"`
   // Allowances at this location
-  EngAllow    string        `json:",omitempty"`
-  PathAllow   string        `json:",omitempty"`
-  PerfAllow   string        `json:",omitempty"`
+  EngAllow    string        `json:"engAllow,omitempty" xml:"engAllow,attr,omitempty"`
+  PathAllow   string        `json:"pathAllow,omitempty" xml:"pathAllow,attr,omitempty"`
+  PerfAllow   string        `json:"perfAllow,omitempty" xml:"perfAllow,attr,omitempty"`
 }
 
 // BinaryCodec writer

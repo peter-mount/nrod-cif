@@ -3,6 +3,7 @@ package cif
 import (
   bolt "github.com/coreos/bbolt"
   "encoding/json"
+  "encoding/xml"
   "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/statistics"
@@ -49,7 +50,12 @@ func (c *CIF) ScheduleHandler( w http.ResponseWriter, r *http.Request ) {
     if s.TrainUID != "" {
       statistics.Incr( "schedule.200" )
       w.WriteHeader( 200 )
-      json.NewEncoder( w ).Encode( s )
+
+      if r.Header.Get( "Accept" ) == "text/xml" {
+        xml.NewEncoder( w ).Encode( s )
+      } else {
+        json.NewEncoder( w ).Encode( s )
+      }
     } else {
       statistics.Incr( "schedule.404" )
       w.WriteHeader( 404 )

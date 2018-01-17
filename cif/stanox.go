@@ -2,6 +2,7 @@ package cif
 
 import (
   "encoding/json"
+  "encoding/xml"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
@@ -144,7 +145,12 @@ func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
     if ary, exists := c.GetStanox( tx, crs ); exists {
       statistics.Incr( "stanox.200" )
       w.WriteHeader( 200 )
-      json.NewEncoder( w ).Encode( ary )
+
+      if r.Header.Get( "Accept" ) == "text/xml" {
+        xml.NewEncoder( w ).Encode( ary )
+      } else {
+        json.NewEncoder( w ).Encode( ary )
+      }
     } else {
       statistics.Incr( "stanox.404" )
       w.WriteHeader( 404 )

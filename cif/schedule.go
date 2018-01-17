@@ -1,6 +1,7 @@
 package cif
 
 import (
+  "encoding/xml"
   "fmt"
   "github.com/peter-mount/golib/codec"
   "time"
@@ -8,42 +9,43 @@ import (
 
 // A train schedule
 type Schedule struct {
+  XMLName                   xml.Name  `xml:"schedule"`
   // The train UID
-  TrainUID                  string
+  TrainUID                  string    `json:"uid" xml:"uid,attr"`
   // The date range the schedule is valid on
-  RunsFrom                  time.Time
-  RunsTo                    time.Time
+  RunsFrom                  time.Time `json:"runsFrom" xml:"from,attr"`
+  RunsTo                    time.Time `json:"runsTo" xml:"to,attr"`
   // The day's of the week the service will run
-  DaysRun                   string
-  BankHolRun                string    `json:",omitempty"`
-  Status                    string
-  Category                  string
+  DaysRun                   string    `json:"daysRun" xml:"daysRun,attr"`
+  BankHolRun                string    `json:"bankHolRun,omitempty" xml:"bankHolRun,attr,omitempty"`
+  Status                    string    `json:"status" xml:"status,attr"`
+  Category                  string    `json:"category" xml:"category,attr"`
   // The identity sometimes confusingly called the Headcode of the service.
   // This is the value you would see in the nrod-td feed
-  TrainIdentity             string    `json:",omitempty"`
+  TrainIdentity             string    `json:"trainIdentity,omitempty" xml:"trainIdentity,attr,omitempty"`
   // The headcode of this service. Don't confuse with TrainIdentity above
-  Headcode                  int       `json:",omitempty"`
-  ServiceCode               int       `json:",omitempty"`
-  PortionId                 string    `json:",omitempty"`
-  PowerType                 string    `json:",omitempty"`
-  TimingLoad                string    `json:",omitempty"`
-  Speed                     int       `json:",omitempty"`
-  OperatingCharacteristics  string    `json:",omitempty"`
-  SeatingClass              string    `json:",omitempty"`
-  Sleepers                  string    `json:",omitempty"`
-  Reservations              string    `json:",omitempty"`
-  CateringCode              string    `json:",omitempty"`
-  ServiceBranding           string    `json:",omitempty"`
+  Headcode                  int       `json:"headcode,omitempty" xml:"headcode,attr,omitempty"`
+  ServiceCode               int       `json:"serviceCode,omitempty" xml:"serviceCode,attr,omitempty"`
+  PortionId                 string    `json:"portionId,omitempty" xml:"portionId,attr,omitempty"`
+  PowerType                 string    `json:"powerType,omitempty" xml:"powerType,attr,omitempty"`
+  TimingLoad                string    `json:"timingLoad,omitempty" xml:"timingLoad,attr,omitempty"`
+  Speed                     int       `json:"speed,omitempty" xml:"speed,attr,omitempty"`
+  OperatingCharacteristics  string    `json:",omitempty" xml:",omitempty"`
+  SeatingClass              string    `json:"seatingClass,omitempty" xml:"seatingClass,attr,omitempty"`
+  Sleepers                  string    `json:"sleepers,omitempty" xml:"sleepers,attr,omitempty"`
+  Reservations              string    `json:"reservations,omitempty" xml:"reservations,attr,omitempty"`
+  CateringCode              string    `json:"cateringCode,omitempty" xml:"cateringCode,attr,omitempty"`
+  ServiceBranding           string    `json:"branding,omitempty" xml:"branding,attr,omitempty"`
   // The STP Indicator
-  STPIndicator              string
-  UICCode                   int       `json:",omitempty"`
+  STPIndicator              string    `json:"stp" xml:"stp,attr"`
+  UICCode                   int       `json:"uic,omitempty" xml:"uic,attr,omitempty"`
   // The operator of this service
-  ATOCCode                  string    `json:",omitempty"`
-  ApplicableTimetable       bool
+  ATOCCode                  string    `json:"operator,omitempty" xml:"operator,attr,omitempty"`
+  ApplicableTimetable       bool      `json:"applicableTimetable" xml:"applicableTimetable,attr"`
   // LO, LI & LT entries
-  Locations              []*Location
+  Locations              []*Location  `json:"locations" xml:"location"`
   // The CIF extract this entry is from
-  DateOfExtract             time.Time
+  DateOfExtract             time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
 }
 
 // BinaryCodec writer

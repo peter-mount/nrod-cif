@@ -2,6 +2,7 @@ package cif
 
 import (
   "encoding/json"
+  "encoding/xml"
   "fmt"
   bolt "github.com/coreos/bbolt"
   "github.com/gorilla/mux"
@@ -15,20 +16,21 @@ import (
 // Tiploc represents a location on the rail network.
 // This can be either a station, a junction or a specific point along the line/
 type Tiploc struct {
+  //XMLName         xml.Name  `xml:"tiploc"`
   // Tiploc key for this location
-  Tiploc          string
-  NLC             int
-  NLCCheck        string
+  Tiploc          string    `json:"tpl" xml:"tpl,attr"`
+  NLC             int       `json:"nlc" xml:"nlc,attr"`
+  NLCCheck        string    `json:"nlcCheck" xml:"nlcCheck,attr"`
   // Proper description for this location
-  Desc            string
+  Desc            string    `json:"desc" xml:",chardata"`
   // Stannox code, 0 means none
-  Stanox          int
+  Stanox          int       `json:"stanox" xml:"stanox,attr,omitempty"`
   // CRS code, "" for none. Codes starting with X or Z are usually not stations.
-  CRS             string
+  CRS             string    `json:"crs" xml:"crs,attr,omitempty"`
   // NLC description of the location
-  NLCDesc         string
+  NLCDesc         string    `json:"nlcDesc" xml:"nlcDesc,omitempty"`
   // The CIF extract this entry is from
-  DateOfExtract   time.Time
+  DateOfExtract   time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
 }
 
 func (t *Tiploc) Write( c *codec.BinaryCodec ) {
@@ -109,7 +111,12 @@ func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
     if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
       w.WriteHeader( 200 )
-      json.NewEncoder( w ).Encode( tiploc )
+
+      if r.Header.Get( "Accept" ) == "text/xml" {
+        xml.NewEncoder( w ).Encode( tiploc )
+      } else {
+        json.NewEncoder( w ).Encode( tiploc )
+      }
     } else {
       statistics.Incr( "tiploc.404" )
       w.WriteHeader( 404 )
