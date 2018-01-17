@@ -3,13 +3,9 @@ package cif
 import (
   bolt "github.com/coreos/bbolt"
   "bytes"
-  "encoding/json"
-  "encoding/xml"
-  "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
-  "log"
-  "net/http"
 )
 
 // GetSchedulesByUID returns all Schedule's for a specific TrainUID.
@@ -40,40 +36,26 @@ func (c *CIF) GetSchedulesByUID( tx *bolt.Tx, uid string ) []*Schedule {
 // router.HandleFunc( "/schedule/{uid}", db.ScheduleUIDHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct.
-func (c *CIF) ScheduleUIDHandler( w http.ResponseWriter, r *http.Request ) {
-  var params = mux.Vars( r )
+func (c *CIF) ScheduleUIDHandler( r *rest.Rest ) error {
+  return c.db.View( func( tx *bolt.Tx ) error {
 
-  uid := params[ "uid" ]
+    uid := r.Var( "uid" )
 
-  if err := c.db.View( func( tx *bolt.Tx ) error {
+    result := &Response{}
+    r.Value( result )
 
-    ary := c.GetSchedulesByUID( tx, uid )
-    if len( ary ) > 0 {
+    result.Schedules = c.GetSchedulesByUID( tx, uid )
+    if len( result.Schedules ) > 0 {
       statistics.Incr( "schedule.uid.200" )
-      w.WriteHeader( 200 )
-
-      if r.Header.Get( "Accept" ) == "text/xml" {
-        // Wrap it in a schedules element
-        var ret schedules = schedules{ Schedules: ary }
-        xml.NewEncoder( w ).Encode( ret )
-      } else {
-        json.NewEncoder( w ).Encode( ary )
-      }
+      r.Status( 200 )
+      result.Status = 200
+      result.Self = r.Self( "/schedule/" + uid )
     } else {
       statistics.Incr( "schedule.uid.404" )
-      w.WriteHeader( 404 )
+      r.Status( 404 )
+      result.Status = 404
     }
 
     return nil
-  }); err != nil {
-    log.Println( "Get schedule", uid, err )
-    statistics.Incr( "schedule.uid.500" )
-    w.WriteHeader( 500 )
-  }
-}
-
-// Wrapper used when writing the response as XML
-type schedules struct {
-    XMLName    xml.Name     `xml:"schedules"`
-    Schedules  []*Schedule  `xml:"schedule"`
+  })
 }

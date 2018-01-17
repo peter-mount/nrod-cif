@@ -1,14 +1,12 @@
 package cif
 
 import (
-  "encoding/json"
-  "encoding/xml"
   bolt "github.com/coreos/bbolt"
-  "github.com/gorilla/mux"
+  "fmt"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
   "log"
-  "net/http"
   "sort"
   "strconv"
 )
@@ -130,36 +128,29 @@ func (c *CIF) GetStanox( tx *bolt.Tx, stanox int ) ( []*Tiploc, bool ) {
 // router.HandleFunc( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct. When running this would allow GET requests like /stanox/89403 to return JSON representing that station.
-func (c *CIF) StanoxHandler( w http.ResponseWriter, r *http.Request ) {
-  var params = mux.Vars( r )
-
-  crs, err := strconv.Atoi( params[ "id" ] )
+func (c *CIF) StanoxHandler( r *rest.Rest ) error {
+  stanox, err := strconv.Atoi( r.Var( "id" ) )
   if err != nil {
-    // Return 404 not 500 as the url is invalid
-    statistics.Incr( "stanox.404" )
-    w.WriteHeader( 404 )
-    return
+    return err
   }
 
-  if err := c.db.View( func( tx *bolt.Tx ) error {
-    if ary, exists := c.GetStanox( tx, crs ); exists {
-      statistics.Incr( "stanox.200" )
-      w.WriteHeader( 200 )
+  return c.db.View( func( tx *bolt.Tx ) error {
+    response := &Response{}
+    r.Value( response )
 
-      if r.Header.Get( "Accept" ) == "text/xml" {
-        xml.NewEncoder( w ).Encode( ary )
-      } else {
-        json.NewEncoder( w ).Encode( ary )
-      }
+    if ary, exists := c.GetStanox( tx, stanox ); exists {
+      statistics.Incr( "stanox.200" )
+      r.Status( 200 )
+      response.Status = 200
+      response.Tiploc = ary
+      response.Self = r.Self( fmt.Sprintf( "/stanox/%s", stanox ) )
     } else {
       statistics.Incr( "stanox.404" )
-      w.WriteHeader( 404 )
+      r.Status( 404 )
+      response.Status = 404
+      response.Message = fmt.Sprintf( "%s not found", stanox )
     }
 
     return nil
-  }); err != nil {
-    statistics.Incr( "stanox.500" )
-    log.Println( "Get Stanox", crs, err )
-    w.WriteHeader( 500 )
-  }
+  })
 }

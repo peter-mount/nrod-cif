@@ -2,6 +2,7 @@
 package main
 
 import (
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
   "cif"
   "flag"
@@ -47,17 +48,16 @@ func main() {
     os.Exit( 0 )
   }()
 
-  var server Server = Server{ Port: *port }
-  server.Init()
+  server := rest.NewServer( *port )
 
-  server.Router.HandleFunc( "/crs/{id}", db.CRSHandler ).Methods( "GET" )
-  server.Router.HandleFunc( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
-  server.Router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
+  server.Handle( "/crs/{id}", db.CRSHandler ).Methods( "GET" )
+  server.Handle( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
+  server.Handle( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
 
-  server.Router.HandleFunc( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods( "GET" )
-  server.Router.HandleFunc( "/schedule/{uid}", db.ScheduleUIDHandler ).Methods( "GET" )
+  server.Handle( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods( "GET" )
+  server.Handle( "/schedule/{uid}", db.ScheduleUIDHandler ).Methods( "GET" )
 
-  server.Router.HandleFunc( "/importCIF", db.ImportHandler ).Methods( "POST" )
+  server.Handle( "/importCIF", db.ImportHandler ).Methods( "POST" )
 
   server.Start()
 }

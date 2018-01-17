@@ -1,15 +1,11 @@
 package cif
 
 import (
-  "encoding/json"
-  "encoding/xml"
   "fmt"
   bolt "github.com/coreos/bbolt"
-  "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
-  "log"
-  "net/http"
   "time"
 )
 
@@ -18,19 +14,26 @@ import (
 type Tiploc struct {
   //XMLName         xml.Name  `xml:"tiploc"`
   // Tiploc key for this location
-  Tiploc          string    `json:"tpl" xml:"tpl,attr"`
+  Tiploc          string    `json:"tiploc" xml:"tiploc,attr"`
   NLC             int       `json:"nlc" xml:"nlc,attr"`
   NLCCheck        string    `json:"nlcCheck" xml:"nlcCheck,attr"`
   // Proper description for this location
-  Desc            string    `json:"desc" xml:",chardata"`
+  Desc            string    `json:"desc" xml:"desc,attr,omitempty"`
   // Stannox code, 0 means none
   Stanox          int       `json:"stanox" xml:"stanox,attr,omitempty"`
   // CRS code, "" for none. Codes starting with X or Z are usually not stations.
   CRS             string    `json:"crs" xml:"crs,attr,omitempty"`
   // NLC description of the location
-  NLCDesc         string    `json:"nlcDesc" xml:"nlcDesc,omitempty"`
+  NLCDesc         string    `json:"nlcDesc" xml:"nlcDesc,attr,omitempty"`
   // The CIF extract this entry is from
   DateOfExtract   time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+  // Self (generated on rest only)
+  Self            string    `json:"self,omitempty" xml:"self,attr,omitempty"`
+}
+
+// SetSelf sets the Self field to match this request
+func (t *Tiploc) SetSelf( r *rest.Rest ) {
+  t.Self = r.Self( "/tiploc/" + t.Tiploc )
 }
 
 func (t *Tiploc) Write( c *codec.BinaryCodec ) {
@@ -102,30 +105,27 @@ func (c *CIF) GetTiploc( tx *bolt.Tx, t string ) ( *Tiploc, bool ) {
 // router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct. When running this would allow GET requests like /tiploc/MSTONEE to return JSON representing that station.
-func (c *CIF) TiplocHandler( w http.ResponseWriter, r *http.Request ) {
-  var params = mux.Vars( r )
+func (c *CIF) TiplocHandler( r *rest.Rest ) error {
+  return c.db.View( func( tx *bolt.Tx ) error {
+    tpl := r.Var( "id" )
 
-  tpl := params[ "id" ]
+    response := &Response{}
+    r.Value( response )
 
-  if err := c.db.View( func( tx *bolt.Tx ) error {
     if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
-      w.WriteHeader( 200 )
-
-      if r.Header.Get( "Accept" ) == "text/xml" {
-        xml.NewEncoder( w ).Encode( tiploc )
-      } else {
-        json.NewEncoder( w ).Encode( tiploc )
-      }
+      r.Status( 200 )
+      response.Status = 200
+      response.Tiploc = []*Tiploc{tiploc}
+      tiploc.SetSelf( r )
+      response.Self = tiploc.Self
     } else {
       statistics.Incr( "tiploc.404" )
-      w.WriteHeader( 404 )
+      r.Status( 404 )
+      response.Status = 404
+      response.Message = tpl + " not found"
     }
 
     return nil
-  } ); err != nil {
-    statistics.Incr( "tiploc.500" )
-    log.Println( "Get Tiploc", tpl, err )
-    w.WriteHeader( 500 )
-  }
+  } )
 }

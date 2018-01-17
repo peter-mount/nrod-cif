@@ -1,14 +1,11 @@
 package cif
 
 import (
-  "encoding/json"
-  "encoding/xml"
   bolt "github.com/coreos/bbolt"
-  "github.com/gorilla/mux"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
   "log"
-  "net/http"
   "sort"
 )
 
@@ -105,30 +102,30 @@ func (c *CIF) GetCRS( tx *bolt.Tx, crs string ) ( []*Tiploc, bool ) {
 // router.HandleFunc( "/crs/{id}", db.CRSHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct. When running this would allow GET requests like /crs/MDE to return JSON representing that station.
-func (c *CIF) CRSHandler( w http.ResponseWriter, r *http.Request ) {
-  var params = mux.Vars( r )
+func (c *CIF) CRSHandler( r *rest.Rest ) error {
+  return c.db.View( func( tx *bolt.Tx ) error {
+    crs := r.Var( "id" )
 
-  crs := params[ "id" ]
+    response := &Response{}
+    r.Value( response )
 
-  if err := c.db.View( func( tx *bolt.Tx ) error {
     if ary, exists := c.GetCRS( tx, crs ); exists {
       statistics.Incr( "crs.200" )
-      w.WriteHeader( 200 )
-
-      if r.Header.Get( "Accept" ) == "text/xml" {
-        xml.NewEncoder( w ).Encode( ary )
-      } else {
-        json.NewEncoder( w ).Encode( ary )
+      r.Status( 200 )
+      response.Status = 200
+      response.Tiploc = ary
+      response.Self = r.Self( "/crs/" + crs )
+      // Set tiploc selfs
+      for _, t := range ary {
+        t.SetSelf( r )
       }
     } else {
       statistics.Incr( "crs.404" )
-      w.WriteHeader( 404 )
+      r.Status( 404 )
+      response.Status = 404
+      response.Message = crs + " not found"
     }
 
     return nil
-  }); err != nil {
-    log.Println( "Get CRS", crs, err )
-    statistics.Incr( "crs.500" )
-    w.WriteHeader( 500 )
-  }
+  })
 }

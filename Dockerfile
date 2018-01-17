@@ -18,6 +18,7 @@ RUN go get -v \
       github.com/coreos/bbolt/... \
       github.com/gorilla/mux \
       github.com/peter-mount/golib/codec \
+      github.com/peter-mount/golib/rest \
       github.com/peter-mount/golib/statistics \
       github.com/peter-mount/golib/util \
       gopkg.in/robfig/cron.v2 \

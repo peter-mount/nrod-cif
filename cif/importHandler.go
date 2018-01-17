@@ -1,9 +1,8 @@
 package cif
 
 import (
-  "encoding/json"
+  "github.com/peter-mount/golib/rest"
   "log"
-  "net/http"
 )
 
 type SimpleResponse struct {
@@ -33,24 +32,17 @@ type SimpleResponse struct {
 // BUG(peter-mount): The Rest service provided by ImportHandler is currently
 // unprotected so anyone can perform an import.
 // We need to provide some means of simple authentication to this handler.
-func (c *CIF) ImportHandler( rw http.ResponseWriter, req *http.Request ) {
+func (c *CIF) ImportHandler( r *rest.Rest ) error {
   log.Println( "CIF Import started" )
 
-  var result SimpleResponse = SimpleResponse{
-    Status: 200,
-    Message: "",
-  }
-
-  if err := c.ImportCIF( req.Body ); err != nil {
+  if err := c.ImportCIF( r.Request().Body ); err != nil {
     log.Printf( "CIF Import: %+v", err )
-    result.Status = 500
-    result.Message = err.Error()
-  } else {
-    log.Println( "CIF Import: completed" )
-    result.Status = 200
-    result.Message = "success"
+    return err
   }
 
-  rw.WriteHeader( result.Status )
-  json.NewEncoder( rw ).Encode( result )
+  log.Println( "CIF Import: completed" )
+  r.Status( 200 ).
+    Value( &SimpleResponse{ Status: 200, Message: "success"} )
+
+  return nil
 }

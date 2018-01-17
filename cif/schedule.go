@@ -9,7 +9,7 @@ import (
 
 // A train schedule
 type Schedule struct {
-  XMLName                   xml.Name  `xml:"schedule"`
+  XMLName                   xml.Name  `json:"-" xml:"schedule"`
   // The train UID
   TrainUID                  string    `json:"uid" xml:"uid,attr"`
   // The date range the schedule is valid on
@@ -46,6 +46,8 @@ type Schedule struct {
   Locations              []*Location  `json:"locations" xml:"location"`
   // The CIF extract this entry is from
   DateOfExtract             time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+  // URL for this Schedule
+  Self                      string    `json:"self,omitempty" xml:"self,attr,omitempty"`
 }
 
 // BinaryCodec writer

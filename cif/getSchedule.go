@@ -2,13 +2,10 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
-  "encoding/json"
-  "encoding/xml"
-  "github.com/gorilla/mux"
+  "fmt"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
-  "log"
-  "net/http"
   "time"
 )
 
@@ -35,12 +32,13 @@ func (c *CIF) GetSchedule( tx *bolt.Tx, uid string, date time.Time, stp string )
 // router.HandleFunc( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct.
-func (c *CIF) ScheduleHandler( w http.ResponseWriter, r *http.Request ) {
-  var params = mux.Vars( r )
+func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
+  return c.db.View( func( tx *bolt.Tx ) error {
 
-  key := params[ "uid" ] + params[ "date" ] + params[ "stp" ]
+    key := r.Var( "uid" ) + r.Var( "date" ) + r.Var( "stp" )
 
-  if err := c.db.View( func( tx *bolt.Tx ) error {
+    result := &Response{}
+    r.Value( result )
 
     s := &Schedule{}
     b := tx.Bucket( []byte( "Schedule" ) ).Get( []byte( key ) )
@@ -49,22 +47,17 @@ func (c *CIF) ScheduleHandler( w http.ResponseWriter, r *http.Request ) {
 
     if s.TrainUID != "" {
       statistics.Incr( "schedule.200" )
-      w.WriteHeader( 200 )
-
-      if r.Header.Get( "Accept" ) == "text/xml" {
-        xml.NewEncoder( w ).Encode( s )
-      } else {
-        json.NewEncoder( w ).Encode( s )
-      }
+      r.Status( 200 )
+      result.Status = 200
+      result.Schedules = []*Schedule{s}
+      result.Self = r.Self( fmt.Sprintf( "/schedule/%s/%s/%s", r.Var( "uid" ), r.Var( "date" ), r.Var( "stp" ) ) )
+      s.Self = result.Self
     } else {
       statistics.Incr( "schedule.404" )
-      w.WriteHeader( 404 )
+      r.Status( 404 )
+      result.Status = 404
     }
 
     return nil
-  }); err != nil {
-    log.Println( "Get schedule", key, err )
-    statistics.Incr( "schedule.500" )
-    w.WriteHeader( 500 )
-  }
+  })
 }
