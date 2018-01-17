@@ -36,7 +36,7 @@ func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
 
     key := r.Var( "uid" ) + r.Var( "date" ) + r.Var( "stp" )
 
-    result := &Response{}
+    result := NewResponse()
     r.Value( result )
 
     s := &Schedule{}
@@ -49,6 +49,8 @@ func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
       r.Status( 200 )
       result.Status = 200
       result.Schedules = []*Schedule{s}
+      c.ResolveScheduleTiplocs( tx, s, result)
+      result.TiplocsSetSelf( r )
       s.SetSelf( r )
       result.Self = s.Self
     } else {

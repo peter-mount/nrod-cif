@@ -106,14 +106,16 @@ func (c *CIF) CRSHandler( r *rest.Rest ) error {
   return c.db.View( func( tx *bolt.Tx ) error {
     crs := r.Var( "id" )
 
-    response := &Response{}
+    response := NewResponse()
     r.Value( response )
 
     if ary, exists := c.GetCRS( tx, crs ); exists {
       statistics.Incr( "crs.200" )
       r.Status( 200 )
       response.Status = 200
-      response.Tiploc = ary
+      response.AddTiplocs( ary )
+      response.TiplocsSetSelf( r )
+      response.sortTiplocs()
       response.Self = r.Self( "/crs/" + crs )
       // Set tiploc selfs
       for _, t := range ary {

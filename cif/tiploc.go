@@ -109,14 +109,14 @@ func (c *CIF) TiplocHandler( r *rest.Rest ) error {
   return c.db.View( func( tx *bolt.Tx ) error {
     tpl := r.Var( "id" )
 
-    response := &Response{}
+    response := NewResponse()
     r.Value( response )
 
     if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
       r.Status( 200 )
       response.Status = 200
-      response.Tiploc = []*Tiploc{tiploc}
+      response.AddTiploc( tiploc )
       tiploc.SetSelf( r )
       response.Self = tiploc.Self
     } else {

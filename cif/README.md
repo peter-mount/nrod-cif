@@ -59,7 +59,7 @@ type CIF struct {
 #### func (*CIF) CRSHandler
 
 ```go
-func (c *CIF) CRSHandler(w http.ResponseWriter, r *http.Request)
+func (c *CIF) CRSHandler(r *rest.Rest) error
 ```
 CRSHandler implements a net/http handler that implements a simple Rest service
 to retrieve CRS/3Alpha records. The handler must have {id} set in the path for
@@ -176,7 +176,7 @@ ALL Import everything, the default and the same as TIPLOC | SCHEDULE
 #### func (*CIF) ImportHandler
 
 ```go
-func (c *CIF) ImportHandler(rw http.ResponseWriter, req *http.Request)
+func (c *CIF) ImportHandler(r *rest.Rest) error
 ```
 ImportHandler implements a net/http handler that implements a Rest service to
 import an uncompressed CIF file from NetworkRail and import it into the cif
@@ -208,10 +208,17 @@ func (c *CIF) OpenDB(dbFile string) error
 ```
 OpenDB opens a CIF database.
 
+#### func (*CIF) ResolveScheduleTiplocs
+
+```go
+func (c *CIF) ResolveScheduleTiplocs(tx *bolt.Tx, s *Schedule, r *Response)
+```
+ResolveScheduleTiplocs resolves the Tiploc's in a Schedule
+
 #### func (*CIF) ScheduleHandler
 
 ```go
-func (c *CIF) ScheduleHandler(w http.ResponseWriter, r *http.Request)
+func (c *CIF) ScheduleHandler(r *rest.Rest) error
 ```
 ScheduleHandler implements a net/http handler that implements a simple Rest
 service to retrieve all schedules for a specific uid, date and STPIndicator The
@@ -227,7 +234,7 @@ where db is a pointer to an active CIF struct.
 #### func (*CIF) ScheduleUIDHandler
 
 ```go
-func (c *CIF) ScheduleUIDHandler(w http.ResponseWriter, r *http.Request)
+func (c *CIF) ScheduleUIDHandler(r *rest.Rest) error
 ```
 ScheduleUIDHandler implements a net/http handler that implements a simple Rest
 service to retrieve all schedules for a specific uid The handler must have {uid}
@@ -242,7 +249,7 @@ where db is a pointer to an active CIF struct.
 #### func (*CIF) StanoxHandler
 
 ```go
-func (c *CIF) StanoxHandler(w http.ResponseWriter, r *http.Request)
+func (c *CIF) StanoxHandler(r *rest.Rest) error
 ```
 StanoxHandler implements a net/http handler that implements a simple Rest
 service to retrieve stanox records. The handler must have {id} set in the path
@@ -266,7 +273,7 @@ this database.
 #### func (*CIF) TiplocHandler
 
 ```go
-func (c *CIF) TiplocHandler(w http.ResponseWriter, r *http.Request)
+func (c *CIF) TiplocHandler(r *rest.Rest) error
 ```
 TiplocHandler implements a net/http handler that implements a simple Rest
 service to retrieve Tiploc records. The handler must have {id} set in the path
@@ -332,33 +339,33 @@ func (h *HD) Write(c *codec.BinaryCodec)
 ```go
 type Location struct {
 	// Type of location:
-	Id string `json:"-"`
+	Id string `json:"-" xml:"-"`
 	// Location including Suffix (for circular routes)
 	// This is guaranteed to be unique per schedule, although for most purposes
 	// like display you would use Tiploc
-	Location string `json:"-"`
+	Location string `json:"-" xml:"-"`
 	// Tiploc of this location. For some schedules like circular routes this can
 	// appear more than once in a schedule.
-	Tiploc string
+	Tiploc string `json:"tpl" xml:"tpl,attr"`
 	// Public Timetable
-	Pta *PublicTime `json:",omitempty"`
-	Ptd *PublicTime `json:",omitempty"`
+	Pta *PublicTime `json:"pta,omitempty" xml:"pta,attr,omitempty"`
+	Ptd *PublicTime `json:"ptd,omitempty" xml:"ptd,attr,omitempty"`
 	// Working Timetable
-	Wta *WorkingTime `json:",omitempty"`
-	Wtd *WorkingTime `json:",omitempty"`
-	Wtp *WorkingTime `json:",omitempty"`
+	Wta *WorkingTime `json:"wta,omitempty" xml:"wta,attr,omitempty"`
+	Wtd *WorkingTime `json:"wtd,omitempty" xml:"wtd,attr,omitempty"`
+	Wtp *WorkingTime `json:"wtp,omitempty" xml:"wtp,attr,omitempty"`
 	// Platform
-	Platform string `json:",omitempty"`
+	Platform string `json:"plat,omitempty" xml:"plat,attr,omitempty"`
 	// Activity up to 6 codes
-	Activity []string `json:",omitempty"`
+	Activity []string `json:"activity,omitempty" xml:"activity,omitempty"`
 	// The Line the train will take
-	Line string `json:",omitempty"`
+	Line string `json:"line,omitempty" xml:"line,attr,omitempty"`
 	// The Path the train will take
-	Path string `json:",omitempty"`
+	Path string `json:"path,omitempty" xml:"path,attr,omitempty"`
 	// Allowances at this location
-	EngAllow  string `json:",omitempty"`
-	PathAllow string `json:",omitempty"`
-	PerfAllow string `json:",omitempty"`
+	EngAllow  string `json:"engAllow,omitempty" xml:"engAllow,attr,omitempty"`
+	PathAllow string `json:"pathAllow,omitempty" xml:"pathAllow,attr,omitempty"`
+	PerfAllow string `json:"perfAllow,omitempty" xml:"perfAllow,attr,omitempty"`
 }
 ```
 
@@ -443,6 +450,13 @@ func (t *PublicTime) MarshalJSON() ([]byte, error)
 ```
 Custom JSON Marshaler. This will write null or the time as "HH:MM"
 
+#### func (*PublicTime) MarshalXMLAttr
+
+```go
+func (t *PublicTime) MarshalXMLAttr(name xml.Name) (xml.Attr, error)
+```
+Custom XML Marshaler.
+
 #### func (*PublicTime) Read
 
 ```go
@@ -464,13 +478,6 @@ func (t *PublicTime) String() string
 ```
 String returns a PublicTime in HH:MM format or 5 blank spaces if it's not set.
 
-#### func (*PublicTime) UnmarshalJSON
-
-```go
-func (t *PublicTime) UnmarshalJSON(data []byte) error
-```
-Custom JSON Unmarshaler
-
 #### func (*PublicTime) Write
 
 ```go
@@ -478,46 +485,99 @@ func (t *PublicTime) Write(c *codec.BinaryCodec)
 ```
 BinaryCodec writer
 
+#### type Response
+
+```go
+type Response struct {
+	XMLName   xml.Name    `json:"-" xml:"response"`
+	Status    int         `json:"status,omitempty" xml:"status,attr,omitempty"`
+	Message   string      `json:"message,omitempty" xml:"message,attr,omitempty"`
+	Schedules []*Schedule `json:"schedules,omitempty" xml:"schedules>schedule,omitempty"`
+	//Tiploc     []*Tiploc              `json:"tiploc,omitempty" xml:"tiplocs>tiploc,omitempty"`
+	Tiploc *TiplocMap `json:"tiploc,omitempty" xml:"tiplocs>tiploc,omitempty"`
+	Self   string     `json:"self" xml:"self,attr,omitempty"`
+}
+```
+
+Common struct used in forming all responses from rest endpoints. This makes the
+responses similar in nature and reduces the amount of redundant code
+
+#### func  NewResponse
+
+```go
+func NewResponse() *Response
+```
+
+#### func (*Response) AddTiploc
+
+```go
+func (r *Response) AddTiploc(t *Tiploc)
+```
+AddTiploc adds a Tiploc to the response
+
+#### func (*Response) AddTiplocs
+
+```go
+func (r *Response) AddTiplocs(t []*Tiploc)
+```
+AddTiplocs adds an array of Tiploc's to the response
+
+#### func (*Response) GetTiploc
+
+```go
+func (r *Response) GetTiploc(n string) (*Tiploc, bool)
+```
+
+#### func (*Response) TiplocsSetSelf
+
+```go
+func (r *Response) TiplocsSetSelf(rs *rest.Rest)
+```
+SetSelf sets the Self field to match this request
+
 #### type Schedule
 
 ```go
 type Schedule struct {
+	XMLName xml.Name `json:"-" xml:"schedule"`
 	// The train UID
-	TrainUID string
+	TrainUID string `json:"uid" xml:"uid,attr"`
 	// The date range the schedule is valid on
-	RunsFrom time.Time
-	RunsTo   time.Time
+	RunsFrom time.Time `json:"runsFrom" xml:"from,attr"`
+	RunsTo   time.Time `json:"runsTo" xml:"to,attr"`
 	// The day's of the week the service will run
-	DaysRun    string
-	BankHolRun string `json:",omitempty"`
-	Status     string
-	Category   string
+	DaysRun    string `json:"daysRun" xml:"daysRun,attr"`
+	BankHolRun string `json:"bankHolRun,omitempty" xml:"bankHolRun,attr,omitempty"`
+	Status     string `json:"status" xml:"status,attr"`
+	Category   string `json:"category" xml:"category,attr"`
 	// The identity sometimes confusingly called the Headcode of the service.
 	// This is the value you would see in the nrod-td feed
-	TrainIdentity string `json:",omitempty"`
+	TrainIdentity string `json:"trainIdentity,omitempty" xml:"trainIdentity,attr,omitempty"`
 	// The headcode of this service. Don't confuse with TrainIdentity above
-	Headcode                 int    `json:",omitempty"`
-	ServiceCode              int    `json:",omitempty"`
-	PortionId                string `json:",omitempty"`
-	PowerType                string `json:",omitempty"`
-	TimingLoad               string `json:",omitempty"`
-	Speed                    int    `json:",omitempty"`
-	OperatingCharacteristics string `json:",omitempty"`
-	SeatingClass             string `json:",omitempty"`
-	Sleepers                 string `json:",omitempty"`
-	Reservations             string `json:",omitempty"`
-	CateringCode             string `json:",omitempty"`
-	ServiceBranding          string `json:",omitempty"`
+	Headcode                 int    `json:"headcode,omitempty" xml:"headcode,attr,omitempty"`
+	ServiceCode              int    `json:"serviceCode,omitempty" xml:"serviceCode,attr,omitempty"`
+	PortionId                string `json:"portionId,omitempty" xml:"portionId,attr,omitempty"`
+	PowerType                string `json:"powerType,omitempty" xml:"powerType,attr,omitempty"`
+	TimingLoad               string `json:"timingLoad,omitempty" xml:"timingLoad,attr,omitempty"`
+	Speed                    int    `json:"speed,omitempty" xml:"speed,attr,omitempty"`
+	OperatingCharacteristics string `json:",omitempty" xml:",omitempty"`
+	SeatingClass             string `json:"seatingClass,omitempty" xml:"seatingClass,attr,omitempty"`
+	Sleepers                 string `json:"sleepers,omitempty" xml:"sleepers,attr,omitempty"`
+	Reservations             string `json:"reservations,omitempty" xml:"reservations,attr,omitempty"`
+	CateringCode             string `json:"cateringCode,omitempty" xml:"cateringCode,attr,omitempty"`
+	ServiceBranding          string `json:"branding,omitempty" xml:"branding,attr,omitempty"`
 	// The STP Indicator
-	STPIndicator string
-	UICCode      int `json:",omitempty"`
+	STPIndicator string `json:"stp" xml:"stp,attr"`
+	UICCode      int    `json:"uic,omitempty" xml:"uic,attr,omitempty"`
 	// The operator of this service
-	ATOCCode            string `json:",omitempty"`
-	ApplicableTimetable bool
+	ATOCCode            string `json:"operator,omitempty" xml:"operator,attr,omitempty"`
+	ApplicableTimetable bool   `json:"applicableTimetable" xml:"applicableTimetable,attr"`
 	// LO, LI & LT entries
-	Locations []*Location
+	Locations []*Location `json:"locations" xml:"location"`
 	// The CIF extract this entry is from
-	DateOfExtract time.Time
+	DateOfExtract time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+	// URL for this Schedule
+	Self string `json:"self,omitempty" xml:"self,attr,omitempty"`
 }
 ```
 
@@ -548,6 +608,15 @@ func (s *Schedule) Read(c *codec.BinaryCodec)
 ```
 BinaryCodec reader
 
+#### func (*Schedule) SetSelf
+
+```go
+func (s *Schedule) SetSelf(r *rest.Rest)
+```
+SetSelf sets the Schedule's Self field according to the inbound request. The
+resulting URL should then refer back to the rest endpoint that would return this
+Schedule.
+
 #### func (*Schedule) String
 
 ```go
@@ -577,20 +646,23 @@ type SimpleResponse struct {
 
 ```go
 type Tiploc struct {
+	//XMLName         xml.Name  `xml:"tiploc"`
 	// Tiploc key for this location
-	Tiploc   string
-	NLC      int
-	NLCCheck string
+	Tiploc   string `json:"tiploc" xml:"tiploc,attr"`
+	NLC      int    `json:"nlc" xml:"nlc,attr"`
+	NLCCheck string `json:"nlcCheck" xml:"nlcCheck,attr"`
 	// Proper description for this location
-	Desc string
+	Desc string `json:"desc" xml:"desc,attr,omitempty"`
 	// Stannox code, 0 means none
-	Stanox int
+	Stanox int `json:"stanox" xml:"stanox,attr,omitempty"`
 	// CRS code, "" for none. Codes starting with X or Z are usually not stations.
-	CRS string
+	CRS string `json:"crs" xml:"crs,attr,omitempty"`
 	// NLC description of the location
-	NLCDesc string
+	NLCDesc string `json:"nlcDesc" xml:"nlcDesc,attr,omitempty"`
 	// The CIF extract this entry is from
-	DateOfExtract time.Time
+	DateOfExtract time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+	// Self (generated on rest only)
+	Self string `json:"self,omitempty" xml:"self,attr,omitempty"`
 }
 ```
 
@@ -603,6 +675,13 @@ a junction or a specific point along the line/
 func (t *Tiploc) Read(c *codec.BinaryCodec)
 ```
 
+#### func (*Tiploc) SetSelf
+
+```go
+func (t *Tiploc) SetSelf(r *rest.Rest)
+```
+SetSelf sets the Self field to match this request
+
 #### func (*Tiploc) String
 
 ```go
@@ -614,6 +693,20 @@ String returns a human readable version of a Tiploc
 
 ```go
 func (t *Tiploc) Write(c *codec.BinaryCodec)
+```
+
+#### type TiplocMap
+
+```go
+type TiplocMap struct {
+}
+```
+
+
+#### func (*TiplocMap) MarshalJSON
+
+```go
+func (t *TiplocMap) MarshalJSON() ([]byte, error)
 ```
 
 #### type WorkingTime
@@ -656,6 +749,13 @@ func (t *WorkingTime) MarshalJSON() ([]byte, error)
 ```
 Custom JSON Marshaler. This will write null or the time as "HH:MM:SS"
 
+#### func (*WorkingTime) MarshalXMLAttr
+
+```go
+func (t *WorkingTime) MarshalXMLAttr(name xml.Name) (xml.Attr, error)
+```
+Custom XML Marshaler.
+
 #### func (*WorkingTime) Read
 
 ```go
@@ -677,13 +777,6 @@ func (t *WorkingTime) String() string
 ```
 String returns a PublicTime in HH:MM:SS format or 8 blank spaces if it's not
 set.
-
-#### func (*WorkingTime) UnmarshalJSON
-
-```go
-func (t *WorkingTime) UnmarshalJSON(data []byte) error
-```
-Custom JSON Unmarshaler
 
 #### func (*WorkingTime) Write
 
