@@ -50,6 +50,9 @@ func (c *CIF) ScheduleUIDHandler( r *rest.Rest ) error {
       r.Status( 200 )
       result.Status = 200
       result.Self = r.Self( "/schedule/" + uid )
+      for _, s := range result.Schedules {
+        s.SetSelf( r )
+      }
     } else {
       statistics.Incr( "schedule.uid.404" )
       r.Status( 404 )

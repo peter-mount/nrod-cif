@@ -2,7 +2,6 @@ package cif
 
 import (
   bolt "github.com/coreos/bbolt"
-  "fmt"
   "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/rest"
   "github.com/peter-mount/golib/statistics"
@@ -50,8 +49,8 @@ func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
       r.Status( 200 )
       result.Status = 200
       result.Schedules = []*Schedule{s}
-      result.Self = r.Self( fmt.Sprintf( "/schedule/%s/%s/%s", r.Var( "uid" ), r.Var( "date" ), r.Var( "stp" ) ) )
-      s.Self = result.Self
+      s.SetSelf( r )
+      result.Self = s.Self
     } else {
       statistics.Incr( "schedule.404" )
       r.Status( 404 )

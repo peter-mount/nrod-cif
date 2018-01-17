@@ -4,6 +4,7 @@ import (
   "encoding/xml"
   "fmt"
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/golib/rest"
   "time"
 )
 
@@ -176,4 +177,15 @@ func (c *CIF) deleteSchedule( s *Schedule ) error {
   key := []byte( s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator )
 
   return c.schedule.Delete( key )
+}
+
+// SetSelf sets the Schedule's Self field according to the inbound request.
+// The resulting URL should then refer back to the rest endpoint that would
+// return this Schedule.
+func (s *Schedule) SetSelf( r *rest.Rest ) {
+  s.Self = r.Self( fmt.Sprintf(
+    "/schedule/%s/%s/%s",
+    s.TrainUID,
+    s.RunsFrom.Format( Date ),
+    s.STPIndicator ) )
 }
