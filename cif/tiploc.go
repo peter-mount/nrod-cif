@@ -18,13 +18,13 @@ type Tiploc struct {
   NLC             int       `json:"nlc" xml:"nlc,attr"`
   NLCCheck        string    `json:"nlcCheck" xml:"nlcCheck,attr"`
   // Proper description for this location
-  Desc            string    `json:"desc" xml:"desc,attr,omitempty"`
+  Desc            string    `json:"desc,omitempty" xml:"desc,attr,omitempty"`
   // Stannox code, 0 means none
-  Stanox          int       `json:"stanox" xml:"stanox,attr,omitempty"`
+  Stanox          int       `json:"stanox,omitempty" xml:"stanox,attr,omitempty"`
   // CRS code, "" for none. Codes starting with X or Z are usually not stations.
-  CRS             string    `json:"crs" xml:"crs,attr,omitempty"`
+  CRS             string    `json:"crs,omitempty" xml:"crs,attr,omitempty"`
   // NLC description of the location
-  NLCDesc         string    `json:"nlcDesc" xml:"nlcDesc,attr,omitempty"`
+  NLCDesc         string    `json:"nlcDesc,omitempty" xml:"nlcDesc,attr,omitempty"`
   // The CIF extract this entry is from
   DateOfExtract   time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
   // Self (generated on rest only)
