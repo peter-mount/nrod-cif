@@ -1,10 +1,15 @@
-# Dockerfile used to build the application
+# ============================================================
+# Dockerfile used to build the nrod-cif microservice
+# ============================================================
 
 ARG arch=amd64
 ARG goos=linux
 
-# Build container containing our pre-pulled libraries
-FROM golang:latest as build
+# ============================================================
+# Build container containing our pre-pulled libraries.
+# As this changes rarely it means we can use the cache between
+# building each microservice.
+FROM golang:alpine as build
 
 # The golang alpine image is missing git so ensure we have additional tools
 RUN apk add --no-cache \
