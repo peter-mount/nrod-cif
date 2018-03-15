@@ -1,11 +1,15 @@
 # Dockerfile used to build the application
 
+ARG arch=amd64
+ARG goos=linux
+
 # Build container containing our pre-pulled libraries
 FROM golang:latest as build
 
-# Static compile
-ENV CGO_ENABLED=0
-ENV GOOS=linux
+# The golang alpine image is missing git so ensure we have additional tools
+RUN apk add --no-cache \
+      curl \
+      git
 
 # We want to build our final image under /dest
 # A copy of /etc/ssl is required if we want to use https datasources
@@ -29,16 +33,45 @@ RUN go get -v \
       path/filepath \
       time
 
-# Import the source and compile
-#WORKDIR /usr/local/go/src
+# ============================================================
+# source container contains the source as it exists within the
+# repository.
+FROM build as source
 WORKDIR /go/src
 ADD . .
 
-# Now each binary
-RUN go build -v -x \
-      -o /dest/bin/cifserver bin/cifserver
+# ============================================================
+# Compile the source.
+FROM source as compiler
+ARG arch
+ARG goos
+ARG goarch
+ARG goarm
 
-# Finally build the final runtime container will all required files
+# Microservice version is the commit hash from git
+RUN version="$(git rev-parse --short HEAD)" &&\
+    sed -i "s/@@version@@/${version} ${goos}(${arch})/g" bin/version.go
+
+# Build the microservice.
+# NB: CGO_ENABLED=0 forces a static build
+RUN CGO_ENABLED=0 \
+    GOOS=${goos} \
+    GOARCH=${goarch} \
+    GOARM=${goarm} \
+    go build \
+      -o /dest/nrod-cif \
+      bin
+
+# ============================================================
+# Finally build the final runtime container for the specific
+# microservice
 FROM scratch
-COPY --from=build /dest/ /
-CMD ["cifserver"]
+
+# The default database directory
+Volume /database
+
+# Install our built image
+COPY --from=compiler /dest/ /
+
+ENTRYPOINT ["/nrof-cif"]
+CMD [ "-c", "/config.yaml"]
