@@ -1,0 +1,20 @@
+# Example config.yaml file for nrodcif
+#
+# Note this format is similar to that in nre-feeds, this was done so that a
+# single config.yaml file could be used for all services
+
+# NROD connection details
+networkrail:
+  user:
+    # NROD username
+    username: "user@example.com"
+    # NROD password
+    password: "secret"
+  # ActiveMQ parameters - not used in nrodcif
+  activeMQ:
+    # Hostname
+    #server: datafeeds.networkrail.co.uk
+    # port
+    #port: 61619
+    # clientid - the username/email is adviced
+    clientid: "user@example.com"

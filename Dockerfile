@@ -64,8 +64,8 @@ RUN CGO_ENABLED=0 \
     GOARCH=${goarch} \
     GOARM=${goarm} \
     go build \
-      -o /dest/nrod-cif \
-      bin
+      -o /dest/nrodcif \
+      bin/nrodcif
 
 # ============================================================
 # Finally build the final runtime container for the specific
@@ -78,5 +78,5 @@ Volume /database
 # Install our built image
 COPY --from=compiler /dest/ /
 
-ENTRYPOINT ["/nrof-cif"]
+ENTRYPOINT ["/nrodcif"]
 CMD [ "-c", "/config.yaml"]

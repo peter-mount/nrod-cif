@@ -20,8 +20,21 @@ type Config struct {
   }                         `yaml:"services"`
 
   Database struct {
-    Path          string    `yaml:path`
+    Path          string    `yaml:"path"`
+    Cif           string    `yaml:"cif"`
   }                         `yaml:"database"`
+
+  NetworkRail struct {
+    user struct {
+      Username      string  `yaml:"username"`
+      Password      string  `yaml:"password"`
+    }                       `yaml:"user"`
+    ActiveMQ struct {
+      Server        string  `yaml:"server"`
+      Port          int     `yaml:"port"`
+      ClientId      string  `yaml:"clientId"`
+    }                       `yaml:"activeMQ"`
+  }                         `yaml:"networkrail"`
 
   Server struct {
     // Root context path, defaults to ""

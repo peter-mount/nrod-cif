@@ -43,9 +43,9 @@ func RunApplication( app func( *Config ) ( func(), error ) ) {
     log.Fatal( err )
   }
 
-  //if err := config.initDb(); err != nil {
-  //  log.Fatal( err )
-  //}
+  if err := config.initDb(); err != nil {
+    log.Fatal( err )
+  }
 
   if close, err := app( config ); err != nil {
     log.Fatal( err )
