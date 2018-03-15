@@ -1,35 +1,56 @@
 #!/bin/sh
+#
+# Script to run a build for a specific microservice and platform.
+#
+# SYNTAX
+#
+# docker.sh imagename microservice arch version
+#
+# Where arch is one of the following: amd64 arm32v6 arm32v7 arm64v8
+#
+# image should be the full name, e.g. area51/nre-feeds:latest or area51/nre-feeds:0.2
+# This script will append -{microservice}-{arch} to that name
+#
 
-clear
-docker build -t test . || exit 1
+IMAGE=$1
+ARCH=$2
+VERSION=$3
 
-#exit
+# Resolve the architecture
+case $ARCH in
+  amd64)
+    GOARCH=amd64
+    ;;
+  arm32v6)
+    GOARCH=arm
+    GOARM=6
+    ;;
+  arm32v7)
+    GOARCH=arm
+    GOARM=7
+    ;;
+  arm64v8)
+    GOARCH=arm64
+    ;;
+  *)
+    echo "Unsupported architecture $ARCH"
+    exit 1
+    ;;
+esac
 
-#rm -f /home/peter/tmp/cif.db
+# For now just support Linux
+GOOS=linux
 
-if [ -z "$1" ]
-then
-  # Standalone run
-  docker run -it --rm \
-    --name cifserver \
-    -v /home/peter/tmp/:/database \
-    -p 8081:8081 \
-    test \
-    cifserver \
-    -p 8081 \
-    -d /database/cif.db
-else
-  # Run via traefic
-  docker run -it --rm \
-    --name cifserver \
-    -v /home/peter/tmp/:/database \
-    -l traefik.backend=nrod-cif \
-    -l traefik.docker.network=bridge \
-    -l traefik.frontend.rule=Host:$1 \
-    -l traefik.enable=true \
-    -l traefik.port=8080 \
-    -l traefik.protocol=http \
-    test \
-    cifserver \
-    -d /database/cif.db
-fi
+# The actual image being built
+TAG=${IMAGE}:${ARCH}-${VERSION}
+
+echo "Building image $TAG on $ARCH"
+
+docker build \
+  --force-rm=true \
+  -t ${TAG} \
+  --build-arg arch=${ARCH} \
+  --build-arg goos=${GOOS} \
+  --build-arg goarch=${GOARCH} \
+  --build-arg goarm=${GOARM} \
+  .
