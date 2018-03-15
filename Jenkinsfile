@@ -81,7 +81,7 @@ def buildArch = {
 }
 
 manifests = architectures.collect { architecture -> dockerImage( architecture ) }
-manifests.join(' ')
+manifests = manifests.join(' ')
 
 // Deploy multi-arch image for a service
 def multiArchService = {
