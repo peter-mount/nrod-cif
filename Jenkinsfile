@@ -66,7 +66,7 @@ properties([
 def buildArch = {
   architecture ->
     sh 'docker build' +
-      ' -t ' + dockerImage( service, architecture ) +
+      ' -t ' + dockerImage( architecture ) +
       ' --build-arg skipTest=true' +
       ' --build-arg arch=' + architecture +
       ' --build-arg goos=linux' +
@@ -76,7 +76,7 @@ def buildArch = {
 
     if( repository != '' ) {
       // Push all built images relevant docker repository
-      sh 'docker push ' + dockerImage( service, architecture )
+      sh 'docker push ' + dockerImage( architecture )
     } // repository != ''
 }
 
@@ -85,21 +85,21 @@ manifests.join(' ')
 
 // Deploy multi-arch image for a service
 def multiArchService = {
-  () ->
+  tmp ->
     // Create/amend the manifest with our architectures
-    sh 'docker manifest create -a ' + multiImage( service ) + ' ' + manifests( service )
+    sh 'docker manifest create -a ' + multiImage + ' ' + manifests
 
     // For each architecture annotate them to be correct
     architectures.each {
       architecture -> sh 'docker manifest annotate' +
         ' --os linux' +
         ' --arch ' + goarch( architecture ) +
-        ' ' + multiImage( service ) +
-        ' ' + dockerImage( service, architecture )
+        ' ' + multiImage +
+        ' ' + dockerImage( architecture )
     }
 
     // Publish the manifest
-    sh 'docker manifest push -p ' + multiImage( service )
+    sh 'docker manifest push -p ' + multiImage
 }
 
 // Now build everything on one node
@@ -144,7 +144,7 @@ node('AMD64') {
   // Stages valid only if we have a repository set
   if( repository != '' ) {
     stage( "Multiarch Image" ) {
-      multiArchService( )
+      multiArchService( '' )
     }
   }
 
