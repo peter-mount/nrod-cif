@@ -81,7 +81,7 @@ func parseHHMM( l string, s int, v **util.PublicTime ) int {
     *v = &util.PublicTime{}
     a, _ = strconv.Atoi( c[0:2] )
     b, _ = strconv.Atoi( c[2:4] )
-    (**v).Set( (a *3600) + (b * 60) )
+    (**v).Set( (a *60) + b )
   }
   return ret
 }
@@ -97,9 +97,9 @@ func parseHHMMS( l string, s int, v **util.WorkingTime ) int {
   } else {
     *v = &util.WorkingTime{}
     if b == "H" {
-      (**v).Set( a.Get() + 30)
+      (**v).Set( (a.Get()*60) + 30)
     } else {
-      (**v).Set( a.Get() )
+      (**v).Set( a.Get()*60 )
     }
   }
   return ret
