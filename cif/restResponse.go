@@ -2,6 +2,7 @@ package cif
 
 import (
   "encoding/xml"
+  "github.com/peter-mount/golib/rest"
 )
 
 // Common struct used in forming all responses from rest endpoints.
@@ -9,14 +10,17 @@ import (
 // redundant code
 type Response struct {
   XMLName       xml.Name    `json:"-" xml:"response"`
-  Status        int         `json:"status,omitempty" xml:"status,attr,omitempty"`
   Message       string      `json:"message,omitempty" xml:"message,attr,omitempty"`
   Schedules  []*Schedule    `json:"schedules,omitempty" xml:"schedules>schedule,omitempty"`
-  //Tiploc     []*Tiploc              `json:"tiploc,omitempty" xml:"tiplocs>tiploc,omitempty"`
   Tiploc       *TiplocMap   `json:"tiploc,omitempty" xml:"tiplocs>tiploc,omitempty"`
-  Self          string      `json:"self" xml:"self,attr,omitempty"`
+  Self          string      `json:"self,omitempty" xml:"self,attr,omitempty"`
 }
 
 func NewResponse() *Response {
   return &Response{}
+}
+
+func ( resp *Response ) SetSelf( r *rest.Rest, s string ) {
+  resp.Self = r.Self( s )
+  r.Status( 200 ).Value( resp )
 }

@@ -18,21 +18,15 @@ func (c *CIF) TiplocHandler( r *rest.Rest ) error {
   return c.db.View( func( tx *bolt.Tx ) error {
     tpl := r.Var( "id" )
 
-    response := NewResponse()
-    r.Value( response )
-
     if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
-      r.Status( 200 )
-      response.Status = 200
+      response := NewResponse()
       response.AddTiploc( tiploc )
       tiploc.SetSelf( r )
-      response.Self = tiploc.Self
+      response.SetSelf( r, tiploc.Self )
     } else {
       statistics.Incr( "tiploc.404" )
       r.Status( 404 )
-      response.Status = 404
-      response.Message = tpl + " not found"
     }
 
     return nil

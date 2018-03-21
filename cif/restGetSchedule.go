@@ -19,10 +19,10 @@ import (
 func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
   return c.db.View( func( tx *bolt.Tx ) error {
 
-    key := r.Var( "uid" ) + r.Var( "date" ) + r.Var( "stp" )
-
-    result := NewResponse()
-    r.Value( result )
+    uid := r.Var( "uid" )
+    date := r.Var( "date" )
+    stp := r.Var( "stp" )
+    key := uid + date + stp
 
     s := &Schedule{}
     b := tx.Bucket( []byte( "Schedule" ) ).Get( []byte( key ) )
@@ -31,17 +31,15 @@ func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
 
     if s.TrainUID != "" {
       statistics.Incr( "schedule.200" )
-      r.Status( 200 )
-      result.Status = 200
+      result := NewResponse()
       result.Schedules = []*Schedule{s}
       c.ResolveScheduleTiplocs( tx, s, result)
       result.TiplocsSetSelf( r )
       s.SetSelf( r )
-      result.Self = s.Self
+      result.SetSelf( r, "/schedule/" + uid + "/" + date + "/" + stp )
     } else {
       statistics.Incr( "schedule.404" )
       r.Status( 404 )
-      result.Status = 404
     }
 
     return nil

@@ -20,23 +20,18 @@ func (c *CIF) ScheduleUIDHandler( r *rest.Rest ) error {
     uid := r.Var( "uid" )
 
     result := NewResponse()
-    r.Value( result )
-
     result.Schedules = c.GetSchedulesByUID( tx, uid )
     if len( result.Schedules ) > 0 {
       statistics.Incr( "schedule.uid.200" )
-      r.Status( 200 )
-      result.Status = 200
-      result.Self = r.Self( "/schedule/" + uid )
       for _, s := range result.Schedules {
         c.ResolveScheduleTiplocs( tx, s, result )
         s.SetSelf( r )
         result.TiplocsSetSelf( r )
       }
+      result.SetSelf( r, "/schedule/" + uid )
     } else {
       statistics.Incr( "schedule.uid.404" )
       r.Status( 404 )
-      result.Status = 404
     }
 
     return nil
