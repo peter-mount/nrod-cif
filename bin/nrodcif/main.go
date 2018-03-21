@@ -22,18 +22,7 @@ func app( config *bin.Config ) ( func(), error ) {
     return nil, err
   }
 
+  cif.InitRest( config.Server.Ctx )
+
   return nil, nil
 }
-/*
-  server.Handle( "/crs/{id}", db.CRSHandler ).Methods( "GET" )
-  server.Handle( "/stanox/{id}", db.StanoxHandler ).Methods( "GET" )
-  server.Handle( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
-
-  server.Handle( "/schedule/{uid}/{date}/{stp}", db.ScheduleHandler ).Methods( "GET" )
-  server.Handle( "/schedule/{uid}", db.ScheduleUIDHandler ).Methods( "GET" )
-
-  server.Handle( "/importCIF", db.ImportHandler ).Methods( "POST" )
-
-  server.Start()
-}
-*/
