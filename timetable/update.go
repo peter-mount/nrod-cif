@@ -3,6 +3,8 @@ package timetable
 import (
   bolt "github.com/coreos/bbolt"
   "cif"
+  "fmt"
+  "github.com/peter-mount/golib/codec"
   "log"
 )
 
@@ -31,6 +33,40 @@ func ( t * Timetable ) Update( c *cif.CIF, bucket *bolt.Bucket ) error {
   if err := bucket.ForEach( index.process ); err != nil {
     log.Println( "Timetable update failed", err )
     return err
+  }
+
+  log.Println( "Rebuilding timetable" )
+  if err := t.db.Update( func( tx *bolt.Tx ) error {
+    tt := tx.Bucket( []byte("Timetable") )
+
+    if err := t.clearBucket( tt ); err != nil {
+      return err
+    }
+
+    cnt := 0
+    for crs, crsMap := range index.index {
+      for hr, hrMap := range crsMap {
+        var keys []string
+        for key, _ := range hrMap {
+          keys = append( keys, key )
+        }
+
+        encoder := codec.NewBinaryCodec()
+        encoder.WriteStringArray( keys )
+
+        if err := tt.Put( []byte( fmt.Sprintf( "%s/%d", crs, hr ) ), encoder.Bytes() ); err != nil {
+          return err
+        }
+
+        cnt++
+      }
+    }
+
+    log.Println( "Created", cnt, "entries" )
+    return nil
+  } ); err != nil {
+    log.Println( "Timetable write failed", err )
+    return err;
   }
 
   log.Println( "Timetable complete" )
