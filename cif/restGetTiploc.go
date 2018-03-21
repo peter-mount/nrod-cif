@@ -20,10 +20,7 @@ func (c *CIF) TiplocHandler( r *rest.Rest ) error {
 
     if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
       statistics.Incr( "tiploc.200" )
-      response := NewResponse()
-      response.AddTiploc( tiploc )
-      tiploc.SetSelf( r )
-      response.SetSelf( r, tiploc.Self )
+      r.Status( 200 ).Value( tiploc )
     } else {
       statistics.Incr( "tiploc.404" )
       r.Status( 404 )
