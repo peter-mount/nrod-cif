@@ -27,10 +27,11 @@ func (c *CIF) StanoxHandler( r *rest.Rest ) error {
     if ary, exists := c.GetStanox( tx, stanox ); exists {
       statistics.Incr( "stanox.200" )
       response := NewResponse()
+      response.Stanox = stanox
       response.AddTiplocs( ary )
       response.TiplocsSetSelf( r )
       response.sortTiplocs()
-      response.SetSelf( r, fmt.Sprintf( "/stanox/%s", stanox ) )
+      response.SetSelf( r, fmt.Sprintf( "/stanox/%d", stanox ) )
     } else {
       statistics.Incr( "stanox.404" )
       r.Status( 404 )

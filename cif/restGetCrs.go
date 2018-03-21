@@ -22,6 +22,7 @@ func (c *CIF) CRSHandler( r *rest.Rest ) error {
     if ary, exists := c.GetCRS( tx, crs ); exists {
       statistics.Incr( "crs.200" )
       response := NewResponse()
+      response.Crs = crs
       response.AddTiplocs( ary )
       response.TiplocsSetSelf( r )
       response.sortTiplocs()
