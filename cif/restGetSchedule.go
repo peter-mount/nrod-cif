@@ -29,7 +29,7 @@ func (c *CIF) ScheduleHandler( r *rest.Rest ) error {
     dec := codec.NewBinaryCodecFrom( b )
     dec.Read( s )
 
-    if s.TrainUID != "" {
+    if s.ID.TrainUID != "" {
       statistics.Incr( "schedule.200" )
       result := NewResponse()
       result.Schedules = []*Schedule{s}

@@ -14,7 +14,7 @@ func (c *CIF) GetSchedule( tx *bolt.Tx, uid string, date time.Time, stp string )
   b := tx.Bucket( []byte( "Schedule" ) ).Get( key )
   dec := codec.NewBinaryCodecFrom( b )
   dec.Read( s )
-  if uid == s.TrainUID {
+  if uid == s.ID.TrainUID {
     return s
   }
   return nil

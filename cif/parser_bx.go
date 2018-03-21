@@ -5,12 +5,12 @@ func (c *CIF ) parseBX( l string ) error {
 
   i := 2
   i+=4 // traction class
-  i = parseInt( l, i, 5, &s.UICCode )
-  i = parseStringTrim( l, i, 2, &s.ATOCCode )
+  i = parseInt( l, i, 5, &s.Meta.UICCode )
+  i = parseStringTrim( l, i, 2, &s.Meta.ATOCCode )
 
   var atc string
   i = parseString( l, i, 1, &atc )
-  s.ApplicableTimetable = atc == "Y"
+  s.Meta.ApplicableTimetable = atc == "Y"
 
   return nil
 }

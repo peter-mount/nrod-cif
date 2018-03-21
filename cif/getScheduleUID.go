@@ -18,7 +18,7 @@ func (c *CIF) GetSchedulesByUID( tx *bolt.Tx, uid string ) []*Schedule {
     s := &Schedule{}
     dec := codec.NewBinaryCodecFrom( v )
     dec.Read( s )
-    if uid == s.TrainUID {
+    if uid == s.ID.TrainUID {
       ar = append( ar, s )
     }
   }

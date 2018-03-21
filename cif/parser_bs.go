@@ -33,30 +33,30 @@ func (c *CIF ) parseBSNew( l string, update bool ) {
   // Skip BS
   i := 2
   i++ // TX
-  i = parseString( l, i, 6, &s.TrainUID )
-  i = parseYYMMDD( l, i, &s.RunsFrom )
-  i = parseYYMMDD( l, i, &s.RunsTo )
-  i = parseString( l, i, 7, &s.DaysRun )
-  i = parseStringTrim( l, i, 1, &s.BankHolRun )
-  i = parseString( l, i, 1, &s.Status )
-  i = parseString( l, i, 2, &s.Category )
-  i = parseStringTrim( l, i, 4, &s.TrainIdentity )
-  i = parseInt( l, i, 4, &s.Headcode )
+  i = parseString( l, i, 6, &s.ID.TrainUID )
+  i = parseYYMMDD( l, i, &s.Runs.RunsFrom )
+  i = parseYYMMDD( l, i, &s.Runs.RunsTo )
+  i = parseString( l, i, 7, &s.Runs.DaysRun )
+  i = parseStringTrim( l, i, 1, &s.Runs.BankHolRun )
+  i = parseString( l, i, 1, &s.Meta.Status )
+  i = parseString( l, i, 2, &s.Meta.Category )
+  i = parseStringTrim( l, i, 4, &s.ID.TrainIdentity )
+  i = parseInt( l, i, 4, &s.ID.Headcode )
   i++ // Course Indicator
-  i = parseInt( l, i, 8, &s.ServiceCode )
-  i = parseStringTrim( l, i, 1, &s.PortionId )
-  i = parseStringTrim( l, i, 3, &s.PowerType )
-  i = parseStringTrim( l, i, 4, &s.TimingLoad )
-  i = parseInt( l, i, 3, &s.Speed )
-  i = parseStringTrim( l, i, 6, &s.OperatingCharacteristics )
-  i = parseStringTrim( l, i, 1, &s.SeatingClass )
-  i = parseStringTrim( l, i, 1, &s.Sleepers )
-  i = parseStringTrim( l, i, 1, &s.Reservations )
+  i = parseInt( l, i, 8, &s.Meta.ServiceCode )
+  i = parseStringTrim( l, i, 1, &s.Meta.PortionId )
+  i = parseStringTrim( l, i, 3, &s.Meta.PowerType )
+  i = parseStringTrim( l, i, 4, &s.Meta.TimingLoad )
+  i = parseInt( l, i, 3, &s.Meta.Speed )
+  i = parseStringTrim( l, i, 6, &s.Meta.OperatingCharacteristics )
+  i = parseStringTrim( l, i, 1, &s.Meta.SeatingClass )
+  i = parseStringTrim( l, i, 1, &s.Meta.Sleepers )
+  i = parseStringTrim( l, i, 1, &s.Meta.Reservations )
   i++ // Connection Indicator
-  i = parseStringTrim( l, i, 4, &s.CateringCode )
-  i = parseStringTrim( l, i, 4, &s.ServiceBranding )
+  i = parseStringTrim( l, i, 4, &s.Meta.CateringCode )
+  i = parseStringTrim( l, i, 4, &s.Meta.ServiceBranding )
   i++ // Spare
-  i = parseString( l, i, 1, &s.STPIndicator )
+  i = parseString( l, i, 1, &s.ID.STPIndicator )
 }
 
 func (c *CIF ) parseBSDelete( l string ) *Schedule {
@@ -66,9 +66,9 @@ func (c *CIF ) parseBSDelete( l string ) *Schedule {
 
   i :=2
   i++ // tx
-  i = parseString( l, i, 6, &s.TrainUID )
-  i = parseYYMMDD( l, i, &s.RunsFrom )
-  parseString( l, 79, 1, &s.STPIndicator )
+  i = parseString( l, i, 6, &s.ID.TrainUID )
+  i = parseYYMMDD( l, i, &s.Runs.RunsFrom )
+  parseString( l, 79, 1, &s.ID.STPIndicator )
 
   c.deleteSchedule( &s )
 

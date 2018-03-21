@@ -11,40 +11,46 @@ import (
 // A train schedule
 type Schedule struct {
   XMLName                   xml.Name  `json:"-" xml:"schedule"`
-  // The train UID
-  TrainUID                  string    `json:"uid" xml:"uid,attr"`
-  // The date range the schedule is valid on
-  RunsFrom                  time.Time `json:"runsFrom" xml:"from,attr"`
-  RunsTo                    time.Time `json:"runsTo" xml:"to,attr"`
-  // The day's of the week the service will run
-  DaysRun                   string    `json:"daysRun" xml:"daysRun,attr"`
-  BankHolRun                string    `json:"bankHolRun,omitempty" xml:"bankHolRun,attr,omitempty"`
-  Status                    string    `json:"status" xml:"status,attr"`
-  Category                  string    `json:"category" xml:"category,attr"`
-  // The identity sometimes confusingly called the Headcode of the service.
-  // This is the value you would see in the nrod-td feed
-  TrainIdentity             string    `json:"trainIdentity,omitempty" xml:"trainIdentity,attr,omitempty"`
-  // The headcode of this service. Don't confuse with TrainIdentity above
-  Headcode                  int       `json:"headcode,omitempty" xml:"headcode,attr,omitempty"`
-  ServiceCode               int       `json:"serviceCode,omitempty" xml:"serviceCode,attr,omitempty"`
-  PortionId                 string    `json:"portionId,omitempty" xml:"portionId,attr,omitempty"`
-  PowerType                 string    `json:"powerType,omitempty" xml:"powerType,attr,omitempty"`
-  TimingLoad                string    `json:"timingLoad,omitempty" xml:"timingLoad,attr,omitempty"`
-  Speed                     int       `json:"speed,omitempty" xml:"speed,attr,omitempty"`
-  OperatingCharacteristics  string    `json:",omitempty" xml:",omitempty"`
-  SeatingClass              string    `json:"seatingClass,omitempty" xml:"seatingClass,attr,omitempty"`
-  Sleepers                  string    `json:"sleepers,omitempty" xml:"sleepers,attr,omitempty"`
-  Reservations              string    `json:"reservations,omitempty" xml:"reservations,attr,omitempty"`
-  CateringCode              string    `json:"cateringCode,omitempty" xml:"cateringCode,attr,omitempty"`
-  ServiceBranding           string    `json:"branding,omitempty" xml:"branding,attr,omitempty"`
-  // The STP Indicator
-  STPIndicator              string    `json:"stp" xml:"stp,attr"`
-  UICCode                   int       `json:"uic,omitempty" xml:"uic,attr,omitempty"`
-  // The operator of this service
-  ATOCCode                  string    `json:"operator,omitempty" xml:"operator,attr,omitempty"`
-  ApplicableTimetable       bool      `json:"applicableTimetable" xml:"applicableTimetable,attr"`
+  ID struct {
+    // The train UID
+    TrainUID                  string    `json:"uid" xml:"uid,attr"`
+    // The STP Indicator
+    STPIndicator              string    `json:"stp" xml:"stp,attr"`
+    // The identity sometimes confusingly called the Headcode of the service.
+    // This is the value you would see in the nrod-td feed
+    TrainIdentity             string    `json:"trainIdentity,omitempty" xml:"trainIdentity,attr,omitempty"`
+    // The headcode of this service. Don't confuse with TrainIdentity above
+    Headcode                  int       `json:"headcode,omitempty" xml:"headcode,attr,omitempty"`
+  } `json:"id"`
+  Runs struct {
+    // The date range the schedule is valid on
+    RunsFrom                  time.Time `json:"runsFrom" xml:"from,attr"`
+    RunsTo                    time.Time `json:"runsTo" xml:"to,attr"`
+    // The day's of the week the service will run
+    DaysRun                   string    `json:"daysRun" xml:"daysRun,attr"`
+    BankHolRun                string    `json:"bankHolRun,omitempty" xml:"bankHolRun,attr,omitempty"`
+  } `json:"runs"`
+  Meta struct {
+    Status                    string    `json:"status" xml:"status,attr"`
+    Category                  string    `json:"category" xml:"category,attr"`
+    // The operator of this service
+    ATOCCode                  string    `json:"operator,omitempty" xml:"operator,attr,omitempty"`
+    ApplicableTimetable       bool      `json:"applicableTimetable" xml:"applicableTimetable,attr"`
+    UICCode                   int       `json:"uic,omitempty" xml:"uic,attr,omitempty"`
+    ServiceCode               int       `json:"serviceCode,omitempty" xml:"serviceCode,attr,omitempty"`
+    PortionId                 string    `json:"portionId,omitempty" xml:"portionId,attr,omitempty"`
+    PowerType                 string    `json:"powerType,omitempty" xml:"powerType,attr,omitempty"`
+    TimingLoad                string    `json:"timingLoad,omitempty" xml:"timingLoad,attr,omitempty"`
+    Speed                     int       `json:"speed,omitempty" xml:"speed,attr,omitempty"`
+    OperatingCharacteristics  string    `json:",omitempty" xml:",omitempty"`
+    SeatingClass              string    `json:"seatingClass,omitempty" xml:"seatingClass,attr,omitempty"`
+    Sleepers                  string    `json:"sleepers,omitempty" xml:"sleepers,attr,omitempty"`
+    Reservations              string    `json:"reservations,omitempty" xml:"reservations,attr,omitempty"`
+    CateringCode              string    `json:"cateringCode,omitempty" xml:"cateringCode,attr,omitempty"`
+    ServiceBranding           string    `json:"branding,omitempty" xml:"branding,attr,omitempty"`
+  } `json:"meta"`
   // LO, LI & LT entries
-  Locations              []*Location  `json:"locations" xml:"location"`
+  Locations              []*Location  `json:"schedule" xml:"location"`
   // The CIF extract this entry is from
   DateOfExtract             time.Time `json:"date" xml:"date,attr"`
   // URL for this Schedule
@@ -53,35 +59,35 @@ type Schedule struct {
 
 // Key returns the internal key for this schedule
 func ( s *Schedule ) Key() string {
-  return s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator
+  return s.ID.TrainUID + s.Runs.RunsFrom.Format( Date ) + s.ID.STPIndicator
 }
 
 // BinaryCodec writer
 func ( s *Schedule) Write( c *codec.BinaryCodec ) {
-  c.WriteString( s.TrainUID ).
-    WriteTime( s.RunsFrom ).
-    WriteTime( s.RunsTo ).
-    WriteString( s.DaysRun).
-    WriteString( s.BankHolRun).
-    WriteString( s.Status).
-    WriteString( s.Category).
-    WriteString( s.TrainIdentity).
-    WriteInt( s.Headcode).
-    WriteInt( s.ServiceCode).
-    WriteString( s.PortionId).
-    WriteString( s.PowerType).
-    WriteString( s.TimingLoad).
-    WriteInt( s.Speed).
-    WriteString( s.OperatingCharacteristics).
-    WriteString( s.SeatingClass).
-    WriteString( s.Sleepers).
-    WriteString( s.Reservations).
-    WriteString( s.CateringCode).
-    WriteString( s.ServiceBranding).
-    WriteString( s.STPIndicator).
-    WriteInt( s.UICCode).
-    WriteString( s.ATOCCode).
-    WriteBool( s.ApplicableTimetable).
+  c.WriteString( s.ID.TrainUID ).
+    WriteTime( s.Runs.RunsFrom ).
+    WriteTime( s.Runs.RunsTo ).
+    WriteString( s.Runs.DaysRun).
+    WriteString( s.Runs.BankHolRun).
+    WriteString( s.Meta.Status).
+    WriteString( s.Meta.Category).
+    WriteString( s.ID.TrainIdentity).
+    WriteInt( s.ID.Headcode).
+    WriteInt( s.Meta.ServiceCode).
+    WriteString( s.Meta.PortionId).
+    WriteString( s.Meta.PowerType).
+    WriteString( s.Meta.TimingLoad).
+    WriteInt( s.Meta.Speed).
+    WriteString( s.Meta.OperatingCharacteristics).
+    WriteString( s.Meta.SeatingClass).
+    WriteString( s.Meta.Sleepers).
+    WriteString( s.Meta.Reservations).
+    WriteString( s.Meta.CateringCode).
+    WriteString( s.Meta.ServiceBranding).
+    WriteString( s.ID.STPIndicator).
+    WriteInt( s.Meta.UICCode).
+    WriteString( s.Meta.ATOCCode).
+    WriteBool( s.Meta.ApplicableTimetable).
     WriteTime( s.DateOfExtract )
 
   c.WriteInt16( int16( len( s.Locations ) ) )
@@ -92,30 +98,30 @@ func ( s *Schedule) Write( c *codec.BinaryCodec ) {
 
 // BinaryCodec reader
 func ( s *Schedule) Read( c *codec.BinaryCodec ) {
-  c.ReadString( &s.TrainUID ).
-    ReadTime( &s.RunsFrom ).
-    ReadTime( &s.RunsTo ).
-    ReadString( &s.DaysRun).
-    ReadString( &s.BankHolRun).
-    ReadString( &s.Status).
-    ReadString( &s.Category).
-    ReadString( &s.TrainIdentity).
-    ReadInt( &s.Headcode).
-    ReadInt( &s.ServiceCode).
-    ReadString( &s.PortionId).
-    ReadString( &s.PowerType).
-    ReadString( &s.TimingLoad).
-    ReadInt( &s.Speed).
-    ReadString( &s.OperatingCharacteristics).
-    ReadString( &s.SeatingClass).
-    ReadString( &s.Sleepers).
-    ReadString( &s.Reservations).
-    ReadString( &s.CateringCode).
-    ReadString( &s.ServiceBranding).
-    ReadString( &s.STPIndicator).
-    ReadInt( &s.UICCode).
-    ReadString( &s.ATOCCode).
-    ReadBool( &s.ApplicableTimetable).
+  c.ReadString( &s.ID.TrainUID ).
+    ReadTime( &s.Runs.RunsFrom ).
+    ReadTime( &s.Runs.RunsTo ).
+    ReadString( &s.Runs.DaysRun).
+    ReadString( &s.Runs.BankHolRun).
+    ReadString( &s.Meta.Status).
+    ReadString( &s.Meta.Category).
+    ReadString( &s.ID.TrainIdentity).
+    ReadInt( &s.ID.Headcode).
+    ReadInt( &s.Meta.ServiceCode).
+    ReadString( &s.Meta.PortionId).
+    ReadString( &s.Meta.PowerType).
+    ReadString( &s.Meta.TimingLoad).
+    ReadInt( &s.Meta.Speed).
+    ReadString( &s.Meta.OperatingCharacteristics).
+    ReadString( &s.Meta.SeatingClass).
+    ReadString( &s.Meta.Sleepers).
+    ReadString( &s.Meta.Reservations).
+    ReadString( &s.Meta.CateringCode).
+    ReadString( &s.Meta.ServiceBranding).
+    ReadString( &s.ID.STPIndicator).
+    ReadInt( &s.Meta.UICCode).
+    ReadString( &s.Meta.ATOCCode).
+    ReadBool( &s.Meta.ApplicableTimetable).
     ReadTime( &s.DateOfExtract )
 
   var l int16
@@ -133,16 +139,16 @@ func (s *Schedule) Equals( o *Schedule ) bool {
   if o == nil {
     return false
   }
-  return s.TrainUID == o.TrainUID && s.RunsFrom == o.RunsFrom && s.STPIndicator == o.STPIndicator
+  return s.ID.TrainUID == o.ID.TrainUID && s.Runs.RunsFrom == o.Runs.RunsFrom && s.ID.STPIndicator == o.ID.STPIndicator
 }
 
 // String returns the "primary key" for schedules which is TrainUID, RunsFrom & STPIndicator
 func (s *Schedule) String() string {
   return fmt.Sprintf(
     "Schedule[uid=%s, from=%s, stp=%s]",
-    s.TrainUID,
-    s.RunsFrom.Format( Date ),
-    s.STPIndicator )
+    s.ID.TrainUID,
+    s.Runs.RunsFrom.Format( Date ),
+    s.ID.STPIndicator )
 }
 
 func (c *CIF) addSchedule() error {
@@ -190,7 +196,7 @@ func (c *CIF) deleteSchedule( s *Schedule ) error {
 func (s *Schedule) SetSelf( r *rest.Rest ) {
   s.Self = r.Self( fmt.Sprintf(
     "/schedule/%s/%s/%s",
-    s.TrainUID,
-    s.RunsFrom.Format( Date ),
-    s.STPIndicator ) )
+    s.ID.TrainUID,
+    s.Runs.RunsFrom.Format( Date ),
+    s.ID.STPIndicator ) )
 }
