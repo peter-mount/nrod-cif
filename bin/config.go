@@ -22,6 +22,7 @@ type Config struct {
   Database struct {
     Path          string    `yaml:"path"`
     Cif           string    `yaml:"cif"`
+    CifTimetable  string    `yaml:"cifTimetable"`
   }                         `yaml:"database"`
 
   NetworkRail struct {

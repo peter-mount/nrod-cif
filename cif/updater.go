@@ -4,7 +4,7 @@ import (
   "compress/gzip"
   "log"
   "net/http"
-  "time"
+//  "time"
 )
 
 // Handles the current status of an update

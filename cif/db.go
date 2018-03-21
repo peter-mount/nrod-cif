@@ -43,6 +43,13 @@ func (c *CIF) OpenDB( dbFile string ) error {
       } else {
         log.Println( "Database:", h )
       }
+
+      go func() {
+        err := c.UpdateTimetable()
+        if err != nil {
+          log.Println( err )
+        }
+      }()
     }
   }
 
@@ -56,7 +63,7 @@ func (c *CIF) OpenDB( dbFile string ) error {
 func (c *CIF) Close() {
 
   // Only close if we own the DB, e.g. via OpenDB()
-  if c.allowClose && c.db != nil {
+  if c.db != nil {
     c.db.Close()
   }
 

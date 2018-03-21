@@ -20,8 +20,6 @@ type CIF struct {
   // The mode the parser should use when importing NR CIF files.
   // This is a bit mask of TIPLOC or SCHEDULE. If not set then ALL is used.
   Mode          int
-  // Allow CIF.Close() to close the database.
-  allowClose    bool
   // The DB
   db           *bolt.DB
   // Last import HD record
@@ -40,9 +38,24 @@ type CIF struct {
   schedule     *bolt.Bucket
   //
   Updater     *Updater
+  Timetable    CursorUpdate
+}
+
+type CursorUpdate interface {
+  Update( *CIF, *bolt.Bucket ) error
 }
 
 // String returns a human readable description of the latest CIF file imported into this database.
 func (c *CIF) String() string {
   return c.header.String()
+}
+
+func (c *CIF) UpdateTimetable() error {
+  if c.Timetable != nil {
+    return c.db.View( func( tx *bolt.Tx ) error {
+      bucket := tx.Bucket( []byte("Schedule") )
+      return c.Timetable.Update( c, bucket )
+    })
+  }
+  return nil
 }

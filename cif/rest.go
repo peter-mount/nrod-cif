@@ -12,5 +12,7 @@ func (c *CIF) InitRest( ctx *rest.ServerContext ) {
   ctx.Handle( "/schedule/{uid}/{date}/{stp}", c.ScheduleHandler ).Methods( "GET" )
   ctx.Handle( "/schedule/{uid}", c.ScheduleUIDHandler ).Methods( "GET" )
 
+  ctx.Handle( "/timetable/{crs}/{date}/{hour}", c.TimetableHandler ).Methods( "GET" )
+
   ctx.Handle( "/importCIF", c.ImportHandler ).Methods( "POST" )
 }

@@ -51,6 +51,11 @@ type Schedule struct {
   Self                      string    `json:"self,omitempty" xml:"self,attr,omitempty"`
 }
 
+// Key returns the internal key for this schedule
+func ( s *Schedule ) Key() string {
+  return s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator
+}
+
 // BinaryCodec writer
 func ( s *Schedule) Write( c *codec.BinaryCodec ) {
   c.WriteString( s.TrainUID ).
@@ -154,7 +159,7 @@ func (c *CIF) addSchedule() error {
   s.DateOfExtract = c.importhd.DateOfExtract
 
   //
-  key := []byte( s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator )
+  key := []byte( s.Key() )
 
   var os Schedule = Schedule{}
   b := c.schedule.Get( key )
@@ -174,7 +179,7 @@ func (c *CIF) addSchedule() error {
 
 func (c *CIF) deleteSchedule( s *Schedule ) error {
 
-  key := []byte( s.TrainUID + s.RunsFrom.Format( Date ) + s.STPIndicator )
+  key := []byte( s.Key() )
 
   return c.schedule.Delete( key )
 }
