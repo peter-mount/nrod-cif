@@ -15,9 +15,9 @@ func (c *CIF) parseLT( l string ) error {
   i = parseString( l, i, 8, &loc.Location )
   loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
 
-  i = parseHHMMS( l, i, &loc.Wta )
+  i = parseHHMMS( l, i, &loc.Times.Wta )
 
-  i = parseHHMM( l, i, &loc.Pta )
+  i = parseHHMM( l, i, &loc.Times.Pta )
 
   i = parseStringTrim( l, i, 3, &loc.Platform )
   i = parseStringTrim( l, i, 3, &loc.Path )

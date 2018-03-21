@@ -15,12 +15,12 @@ func (c *CIF) parseLI( l string ) error {
   i = parseString( l, i, 8, &loc.Location )
   loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
 
-  i = parseHHMMS( l, i, &loc.Wta )
-  i = parseHHMMS( l, i, &loc.Wtd )
-  i = parseHHMMS( l, i, &loc.Wtp )
+  i = parseHHMMS( l, i, &loc.Times.Wta )
+  i = parseHHMMS( l, i, &loc.Times.Wtd )
+  i = parseHHMMS( l, i, &loc.Times.Wtp )
 
-  i = parseHHMM( l, i, &loc.Pta )
-  i = parseHHMM( l, i, &loc.Ptd )
+  i = parseHHMM( l, i, &loc.Times.Pta )
+  i = parseHHMM( l, i, &loc.Times.Ptd )
 
   i = parseStringTrim( l, i, 3, &loc.Platform )
   i = parseStringTrim( l, i, 3, &loc.Line )

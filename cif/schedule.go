@@ -46,7 +46,7 @@ type Schedule struct {
   // LO, LI & LT entries
   Locations              []*Location  `json:"locations" xml:"location"`
   // The CIF extract this entry is from
-  DateOfExtract             time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+  DateOfExtract             time.Time `json:"date" xml:"date,attr"`
   // URL for this Schedule
   Self                      string    `json:"self,omitempty" xml:"self,attr,omitempty"`
 }

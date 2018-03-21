@@ -25,7 +25,7 @@ type Tiploc struct {
   // NLC description of the location
   NLCDesc         string    `json:"nlcDesc,omitempty" xml:"nlcDesc,attr,omitempty"`
   // The CIF extract this entry is from
-  DateOfExtract   time.Time `json:"dateOfExtract" xml:"dateOfExtract,attr"`
+  DateOfExtract   time.Time `json:"date" xml:"date,attr"`
   // Self (generated on rest only)
   Self            string    `json:"self,omitempty" xml:"self,attr,omitempty"`
 }

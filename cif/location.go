@@ -42,12 +42,7 @@ type Location struct {
   // appear more than once in a schedule.
   Tiploc      string        `json:"tpl" xml:"tpl,attr"`
   // Public Timetable
-  Pta        *util.PublicTime    `json:"pta,omitempty" xml:"pta,attr,omitempty"`
-  Ptd        *util.PublicTime    `json:"ptd,omitempty" xml:"ptd,attr,omitempty"`
-  // Working Timetable
-  Wta        *util.WorkingTime   `json:"wta,omitempty" xml:"wta,attr,omitempty"`
-  Wtd        *util.WorkingTime   `json:"wtd,omitempty" xml:"wtd,attr,omitempty"`
-  Wtp        *util.WorkingTime   `json:"wtp,omitempty" xml:"wtp,attr,omitempty"`
+  Times       util.CircularTimes `json:"time"`
   // Platform
   Platform    string        `json:"plat,omitempty" xml:"plat,attr,omitempty"`
   // Activity up to 6 codes
@@ -66,13 +61,9 @@ type Location struct {
 func (l *Location) Write( c *codec.BinaryCodec ) {
   c.WriteString( l.Id ).
     WriteString( l.Location ).
-    WriteString( l.Tiploc )
-  util.PublicTimeWrite( c, l.Pta )
-  util.PublicTimeWrite( c, l.Ptd )
-  util.WorkingTimeWrite( c, l.Wta )
-  util.WorkingTimeWrite( c, l.Wtd )
-  util.WorkingTimeWrite( c, l.Wtp )
-  c.WriteString( l.Platform ).
+    WriteString( l.Tiploc ).
+    Write( &l.Times ).
+    WriteString( l.Platform ).
     WriteStringArray( l.Activity ).
     WriteString( l.Line ).
     WriteString( l.Path ).
@@ -85,13 +76,9 @@ func (l *Location) Write( c *codec.BinaryCodec ) {
 func (l *Location) Read( c *codec.BinaryCodec ) {
   c.ReadString( &l.Id ).
     ReadString( &l.Location ).
-    ReadString( &l.Tiploc )
-  l.Pta = util.PublicTimeRead( c )
-  l.Ptd = util.PublicTimeRead( c )
-  l.Wta = util.WorkingTimeRead( c )
-  l.Wtd = util.WorkingTimeRead( c )
-  l.Wtp = util.WorkingTimeRead( c )
-  c.ReadString( &l.Platform ).
+    ReadString( &l.Tiploc ).
+    Read( &l.Times ).
+    ReadString( &l.Platform ).
     ReadStringArray( &l.Activity ).
     ReadString( &l.Line ).
     ReadString( &l.Path ).
