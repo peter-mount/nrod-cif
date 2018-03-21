@@ -2,6 +2,7 @@ package cif
 
 import (
   "github.com/peter-mount/golib/codec"
+  "github.com/peter-mount/nre-feeds/util"
 )
 
 // A representation of a location within a schedule.
@@ -41,12 +42,12 @@ type Location struct {
   // appear more than once in a schedule.
   Tiploc      string        `json:"tpl" xml:"tpl,attr"`
   // Public Timetable
-  Pta        *PublicTime    `json:"pta,omitempty" xml:"pta,attr,omitempty"`
-  Ptd        *PublicTime    `json:"ptd,omitempty" xml:"ptd,attr,omitempty"`
+  Pta        *util.PublicTime    `json:"pta,omitempty" xml:"pta,attr,omitempty"`
+  Ptd        *util.PublicTime    `json:"ptd,omitempty" xml:"ptd,attr,omitempty"`
   // Working Timetable
-  Wta        *WorkingTime   `json:"wta,omitempty" xml:"wta,attr,omitempty"`
-  Wtd        *WorkingTime   `json:"wtd,omitempty" xml:"wtd,attr,omitempty"`
-  Wtp        *WorkingTime   `json:"wtp,omitempty" xml:"wtp,attr,omitempty"`
+  Wta        *util.WorkingTime   `json:"wta,omitempty" xml:"wta,attr,omitempty"`
+  Wtd        *util.WorkingTime   `json:"wtd,omitempty" xml:"wtd,attr,omitempty"`
+  Wtp        *util.WorkingTime   `json:"wtp,omitempty" xml:"wtp,attr,omitempty"`
   // Platform
   Platform    string        `json:"plat,omitempty" xml:"plat,attr,omitempty"`
   // Activity up to 6 codes
@@ -66,11 +67,11 @@ func (l *Location) Write( c *codec.BinaryCodec ) {
   c.WriteString( l.Id ).
     WriteString( l.Location ).
     WriteString( l.Tiploc )
-  PublicTimeWrite( c, l.Pta )
-  PublicTimeWrite( c, l.Ptd )
-  WorkingTimeWrite( c, l.Wta )
-  WorkingTimeWrite( c, l.Wtd )
-  WorkingTimeWrite( c, l.Wtp )
+  util.PublicTimeWrite( c, l.Pta )
+  util.PublicTimeWrite( c, l.Ptd )
+  util.WorkingTimeWrite( c, l.Wta )
+  util.WorkingTimeWrite( c, l.Wtd )
+  util.WorkingTimeWrite( c, l.Wtp )
   c.WriteString( l.Platform ).
     WriteStringArray( l.Activity ).
     WriteString( l.Line ).
@@ -85,11 +86,11 @@ func (l *Location) Read( c *codec.BinaryCodec ) {
   c.ReadString( &l.Id ).
     ReadString( &l.Location ).
     ReadString( &l.Tiploc )
-  l.Pta = PublicTimeRead( c )
-  l.Ptd = PublicTimeRead( c )
-  l.Wta = WorkingTimeRead( c )
-  l.Wtd = WorkingTimeRead( c )
-  l.Wtp = WorkingTimeRead( c )
+  l.Pta = util.PublicTimeRead( c )
+  l.Ptd = util.PublicTimeRead( c )
+  l.Wta = util.WorkingTimeRead( c )
+  l.Wtd = util.WorkingTimeRead( c )
+  l.Wtp = util.WorkingTimeRead( c )
   c.ReadString( &l.Platform ).
     ReadStringArray( &l.Activity ).
     ReadString( &l.Line ).

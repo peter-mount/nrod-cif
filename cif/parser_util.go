@@ -1,6 +1,7 @@
 package cif
 
 import (
+  "github.com/peter-mount/nre-feeds/util"
   "strconv"
   "strings"
   "time"
@@ -70,14 +71,14 @@ func parseInt( line string, s int, l int, v *int ) int {
 }
 
 // Parse HHMM into time of day in seconds, -1 if none
-func parseHHMM( l string, s int, v **PublicTime ) int {
+func parseHHMM( l string, s int, v **util.PublicTime ) int {
   var a, b int
   var c string
   var ret = parseString( l, s, 4, &c )
   if c == "    " {
     *v = nil
   } else {
-    *v = &PublicTime{}
+    *v = &util.PublicTime{}
     a, _ = strconv.Atoi( c[0:2] )
     b, _ = strconv.Atoi( c[2:4] )
     (**v).Set( (a *3600) + (b * 60) )
@@ -86,15 +87,15 @@ func parseHHMM( l string, s int, v **PublicTime ) int {
 }
 
 // Parse HHMMS into time of day in seconds, -1 if none. S is "H" for 30 seconds past minute
-func parseHHMMS( l string, s int, v **WorkingTime ) int {
-  var a *PublicTime
+func parseHHMMS( l string, s int, v **util.WorkingTime ) int {
+  var a *util.PublicTime
   var b string
   var ret = parseHHMM( l, s, &a )
   ret = parseString( l, ret, 1, &b )
   if a == nil || a.IsZero() {
     *v = nil
   } else {
-    *v = &WorkingTime{}
+    *v = &util.WorkingTime{}
     if b == "H" {
       (**v).Set( a.Get() + 30)
     } else {
