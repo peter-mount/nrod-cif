@@ -24,6 +24,8 @@ type Tiploc struct {
   CRS             string    `json:"crs,omitempty" xml:"crs,attr,omitempty"`
   // NLC description of the location
   NLCDesc         string    `json:"nlcDesc,omitempty" xml:"nlcDesc,attr,omitempty"`
+  // True if this tiploc is a station
+  Station         bool      `json:"station"`
   // The CIF extract this entry is from
   DateOfExtract   time.Time `json:"date" xml:"date,attr"`
   // Self (generated on rest only)
@@ -55,6 +57,8 @@ func (t *Tiploc) Read( c *codec.BinaryCodec ) {
     ReadString( &t.CRS ).
     ReadString( &t.NLCDesc ).
     ReadTime( &t.DateOfExtract )
+  
+  t.Station = t.CRS != "" && !(t.CRS[0] == 'X' || t.CRS[0] == 'Z')
 }
 
 // String returns a human readable version of a Tiploc
