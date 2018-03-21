@@ -25,7 +25,7 @@ type Config struct {
   }                         `yaml:"database"`
 
   NetworkRail struct {
-    user struct {
+    User struct {
       Username      string  `yaml:"username"`
       Password      string  `yaml:"password"`
     }                       `yaml:"user"`

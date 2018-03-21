@@ -16,6 +16,10 @@ func app( config *bin.Config ) ( func(), error ) {
 
   cif := &cif.CIF{}
 
+  if config.NetworkRail.User.Username != "" && config.NetworkRail.User.Password != "" {
+    cif.SetUpdater( config.NetworkRail.User.Username, config.NetworkRail.User.Password )
+  }
+
   config.DbPath( &config.Database.Cif, "cif.db" )
 
   if err := cif.OpenDB( config.Database.Cif ); err != nil {

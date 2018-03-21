@@ -18,45 +18,31 @@ func (c *CIF) OpenDB( dbFile string ) error {
     } ); err != nil {
       return err
   } else {
-    c.allowClose = true
-    return c.useDB( db )
-  }
-}
+    c.db = db
 
-// UseDB Allows an already open database to be used with cif.
-func (c *CIF) UseDB( db *bolt.DB ) error {
-  if c.db != nil {
-    return errors.New( "CIF Already attached to a Database" )
-  }
+    // Set the default mode for the parser
+    if ( c.Mode & ALL ) == 0 {
+      c.Mode = ALL
+    }
 
-  c.allowClose = false
-  return c.useDB( db )
-}
+    // Now ensure the DB is initialised with the required buckets
+    if err := c.initDB(); err != nil {
+      return err
+    }
 
-// common to OpenDB() && UseDB()
-func (c *CIF) useDB( db *bolt.DB ) error {
-
-  c.db = db
-
-  // Set the default mode for the parser
-  if ( c.Mode & ALL ) == 0 {
-    c.Mode = ALL
-  }
-
-  // Now ensure the DB is initialised with the required buckets
-  if err := c.initDB(); err != nil {
-    return err
-  }
-
-  if h, err := c.GetHD(); err != nil {
-    return err
-  } else {
-    c.header = h
-
-    if h.Id == "" {
-      log.Println( "NOTICE: Database requires a full CIF import" )
+    if h, err := c.GetHD(); err != nil {
+      return err
     } else {
-      log.Println( "Database:", h )
+      c.header = h
+
+      if h.Id == "" {
+        log.Println( "NOTICE: Database requires a full CIF import" )
+        if c.Updater != nil {
+          go c.Updater.Update()
+        }
+      } else {
+        log.Println( "Database:", h )
+      }
     }
   }
 

@@ -38,6 +38,8 @@ type CIF struct {
   crs          *bolt.Bucket
   stanox       *bolt.Bucket
   schedule     *bolt.Bucket
+  //
+  Updater     *Updater
 }
 
 // String returns a human readable description of the latest CIF file imported into this database.
