@@ -41,7 +41,7 @@ func (c *CIF) Execute( label, cmd string ) error {
 func (c *CIF) Cluster() error {
   log.Println( "Clustering station index" )
 
-  _, err := c.db.Exec( "CLUSTER timetable.station USING station_t" )
+  _, err := c.db.Exec( "CLUSTER timetable.station USING station_tdt" )
   if err != nil {
     return err
   }

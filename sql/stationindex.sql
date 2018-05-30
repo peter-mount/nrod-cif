@@ -7,17 +7,22 @@
 CREATE OR REPLACE FUNCTION timetable.addschedule( pSched JSON )
 RETURNS BIGINT AS $$
 DECLARE
-  vsid     BIGINT;
+  vsid    BIGINT;
   step    JSON;
-  vord     SMALLINT;
+  vord    SMALLINT;
+  sdt     DATE;
+  edt     DATE;
 BEGIN
+  sdt := (pSched->'runs'->>'runsFrom')::DATE;
+  edt := (pSched->'runs'->>'runsTo')::DATE;
+
   INSERT INTO timetable.schedule
     ( uid, stp, startdate, enddate, entrydate )
     VALUES (
       pSched->'id'->>'uid',
       pSched->'id'->>'stp',
-      (pSched->'runs'->>'runsFrom')::DATE,
-      (pSched->'runs'->>'runsTo')::DATE,
+      sdt,
+      edt,
       NOW()
     )
     ON CONFLICT ( uid, stp, startdate )
@@ -43,11 +48,11 @@ BEGIN
       -- we only index against the public timetable
       IF step->'time'->>'pta' IS NOT NULL OR step->'time'->>'ptd' IS NOT NULL THEN
         INSERT INTO timetable.station
-          ( sid, ord, tid )
+          ( sid, ord, tid, startdate, enddate, time )
           VALUES (
-            vsid,
-            vord,
-            timetable.gettiplocid( step->> 'tpl' )
+            vsid, vord, timetable.gettiplocid( step->> 'tpl' ),
+            sdt, edt,
+            (step->'time'->>'time')::TIME
           );
         vord := vord + 1;
       END IF;
@@ -78,5 +83,46 @@ CREATE TRIGGER scheddeleted
   BEFORE DELETE ON timetable.schedule
   FOR EACH ROW
   EXECUTE PROCEDURE timetable.scheddeleted();
+
+-- ======================================================================
+
+DROP FUNCTION timetable.schedules( CHAR(3), TIME with time zone, TIME with time zone);
+
+CREATE OR REPLACE FUNCTION timetable.schedules( pcrs CHAR(3), pst TIMESTAMP WITH TIME ZONE, pet TIMESTAMP WITH TIME ZONE )
+RETURNS SETOF timetable.station AS $$
+DECLARE
+  ts TIMESTAMP WITHOUT TIME ZONE;
+  sd DATE;
+  ed DATE;
+  st TIME;
+  et TIME;
+BEGIN
+  -- Ensure we use the correct time of day during the summer
+  ts = (pst AT TIME ZONE 'Europe/London'::TEXT)::TIMESTAMP WITHOUT TIME ZONE;
+  sd = (ts::TEXT)::DATE;
+  st = (ts::TEXT)::TIME;
+
+  IF pet IS NULL THEN
+    ts = ts + '1 hour'::INTERVAL;
+  ELSE
+    ts = (pet AT TIME ZONE 'Europe/London'::TEXT)::TIMESTAMP WITHOUT TIME ZONE;
+  END IF;
+  ed = (ts::TEXT)::DATE;
+  et = (ts::TEXT)::TIME;
+
+  RETURN QUERY
+    WITH tpls AS (
+      SELECT * FROM timetable.tiploc t
+        WHERE stanox IN ( SELECT stanox FROM timetable.tiploc t2 WHERE crs = pCrs )
+    )
+    SELECT s.*
+      FROM timetable.station s
+      WHERE s.tid IN (SELECT id FROM tpls)
+        AND s.time BETWEEN st AND et
+        AND s.startdate <= sd
+        AND s.enddate >=ed
+      ORDER BY s.time, s.sid;
+END;
+$$ LANGUAGE PLPGSQL;
 
 -- ======================================================================

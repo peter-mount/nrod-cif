@@ -95,13 +95,18 @@ CREATE TABLE timetable.schedule_json (
 -- Link between schedules and each individual station
 
 CREATE TABLE timetable.station (
-  sid BIGINT NOT NULL REFERENCES timetable.schedule(id),
-  ord SMALLINT NOT NULL,
-  tid BIGINT NOT NULL,
+  sid         BIGINT NOT NULL REFERENCES timetable.schedule(id),
+  ord         SMALLINT NOT NULL,
+  tid         BIGINT NOT NULL,
+  startdate   DATE NOT NULL,
+  enddate     DATE NOT NULL,
+  time        TIME NOT NULL,
   PRIMARY KEY (sid, ord, tid)
 );
 
 CREATE INDEX station_i ON timetable.station(sid);
 CREATE INDEX station_t ON timetable.station(tid);
---CREATE INDEX station_it ON timetable.station(scheduleId,tiploc);
+CREATE INDEX station_td ON timetable.station(tid,startdate,enddate);
+CREATE INDEX station_tdt ON timetable.station(tid,startdate,enddate,time);
+CREATE INDEX station_tt ON timetable.station(tid,time);
 --CREATE INDEX station_io ON timetable.station(scheduleId,ord);
