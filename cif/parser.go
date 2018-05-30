@@ -1,8 +1,9 @@
 package cif
 
 import (
+  "database/sql"
   "errors"
-  bolt "github.com/coreos/bbolt"
+  //bolt "github.com/coreos/bbolt"
   "bufio"
   "io"
   "log"
@@ -11,26 +12,16 @@ import (
 
 // ImportFile imports a uncompressed CIF file retrieved from NetworkRail
 // into the cif database.
-// If this file is a full export then the database will be cleared first.
-//
-// The CIF.Mode field determines how this import is performed.
-// This field is a bitmask so one or more options can be included.
-// They are:
-//
-// TIPLOC   Import tiplocs
-//
-// SCHEDULE Import schedules
-//
-// ALL      Import everything, the default and the same as TIPLOC | SCHEDULE
-func (c *CIF) ImportFile( fname string ) error {
+func (c *CIF) ImportFile( fname string ) (bool, error) {
   file,err := os.Open( fname )
   if err != nil {
-    return err
+    return false, err
   }
 
   defer file.Close()
 
-  return c.ImportCIF( file )
+  skip, err := c.ImportCIF( file )
+  return skip, err
 }
 
 // ImportCIF imports a uncompressed CIF file retrieved from NetworkRail
@@ -46,137 +37,97 @@ func (c *CIF) ImportFile( fname string ) error {
 // SCHEDULE Import schedules
 //
 // ALL      Import everything, the default and the same as TIPLOC | SCHEDULE
-func (c *CIF) ImportCIF( r io.Reader ) error {
+func (c *CIF) ImportCIF( r io.Reader ) (bool, error) {
   scanner := bufio.NewScanner( r )
 
-  if err := c.parseFile( scanner ); err != nil {
-    return err
+  if skip, err := c.parseFile( scanner ); err != nil {
+    return skip, err
   }
 
-  return scanner.Err()
+  if err := scanner.Err(); err != nil {
+    return false, err
+  }
+
+  return true, nil
 }
 
-func (c *CIF) parseFile( scanner *bufio.Scanner ) error {
-  if c.Mode == 0 {
-    c.Mode = TIPLOC | SCHEDULE
-  }
+func (c *CIF) parseFile( scanner *bufio.Scanner ) (bool, error) {
 
-  var lastLine string
+  var skip bool
 
-  // Parse the header in it's own tx. This may wipe the DB if its a full import
-  err := c.parseFileHeader( scanner )
-  if err != nil {
-    return err
-  }
+  err := c.Update( func( tx *sql.Tx ) error {
 
-  if (c.Mode & TIPLOC) == TIPLOC {
-    lastLine, err = c.parseTiplocs( scanner )
-  }
-  if err != nil {
-    return err
-  }
+    c.parserInit( tx )
 
-  if (c.Mode & SCHEDULE) == SCHEDULE {
+    doImport, err := c.parseFileHeader( scanner )
+    if err != nil {
+      return err
+    }
+
+    if !doImport {
+      skip = doImport
+      return errors.New( "CIF too old" )
+    }
+
+    lastLine, err := c.parseTiplocs( scanner )
+    if err != nil {
+      return err
+    }
+
     err = c.parseSchedules( scanner, lastLine )
-  }
+    if err != nil {
+      return err
+    }
 
-  return err
+    return nil
+  } );
+  return skip, err
 }
 
 // Sets the CIF structure up to the current transaction
-func (c *CIF) parserInit( tx *bolt.Tx ) {
+func (c *CIF) parserInit( tx *sql.Tx ) {
   c.tx = tx
-
-  if (c.Mode & TIPLOC) == TIPLOC {
-    c.tiploc = tx.Bucket( []byte("Tiploc") )
-    c.crs = tx.Bucket( []byte("Crs") )
-    c.stanox = tx.Bucket( []byte("Stanox") )
-  }
-
-  if (c.Mode & SCHEDULE) == SCHEDULE {
-    c.schedule = tx.Bucket( []byte("Schedule") )
-    c.curSchedule = nil
-  }
-
+  c.curSchedule = nil
   c.update = false
 }
 
 // Looks for the initial HD record
 // If the CIF is for a full import then reset the DB
-func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) error {
-  return c.db.Update( func( tx *bolt.Tx ) error {
+func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) ( bool, error ) {
+  if scanner.Scan() {
 
-    c.parserInit( tx )
+    line := scanner.Text()
 
-    if scanner.Scan() {
+    if line[0:2] == "HD" {
 
-      line := scanner.Text()
-
-      if line[0:2] == "HD" {
-
-        if err := c.parseHD( line ); err != nil {
-          return err
-        }
-
-        if !c.header.Update {
-          if err := c.resetDB(); err != nil {
-            return err
-          }
-        }
-
-        return nil
+      doImport, err := c.parseHD( line )
+      if err != nil {
+        return false, err
       }
-    }
 
-    return errors.New( "Not a CIF file" )
-  })
+      return doImport, nil
+    }
+  }
+
+  return false, errors.New( "Not a CIF file" )
 }
 
 // Parses the rest of the file after the header
 func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
   log.Println( "Parsing Tiploc's" )
 
-  var lastLine string
-  rebuildRequired := false
+  var line string
 
-  // Now run the rest of the import
-  if err := c.db.Update( func( tx *bolt.Tx ) error {
-
-    c.parserInit( tx )
-
-    for scanner.Scan() {
-      line := scanner.Text()
-      if bail, err := c.parseTiploc( line ); err != nil {
-        return err
-      } else if bail {
-        lastLine = line
-        return nil
-      } else {
-        rebuildRequired = true
-      }
+  for scanner.Scan() {
+    line = scanner.Text()
+    if bail, err := c.parseTiploc( line ); err != nil {
+      return "", err
+    } else if bail {
+      return line, nil
     }
-
-    return nil
-  }); err != nil {
-    return "", err
   }
 
-  // Now rebuild the Tiploc based buckets if necessary
-  if rebuildRequired {
-    if err := c.db.Update( func( tx *bolt.Tx ) error {
-      c.parserInit( tx )
-
-      if err := c.cleanupStanox(); err != nil {
-        return err
-      }
-
-      return c.cleanupCRS()
-      }); err != nil {
-        return "", err
-      }
-  }
-
-  return lastLine, nil
+  return line, nil
 }
 
 func (c *CIF) parseTiploc( line string ) ( bool, error ) {
@@ -200,30 +151,20 @@ func (c *CIF) parseTiploc( line string ) ( bool, error ) {
 func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   log.Println( "Parsing Schedules" )
 
-  // Now run the rest of the import
-  if err := c.db.Update( func( tx *bolt.Tx ) error {
+  count := 0
 
-    count := 0
-
-    c.parserInit( tx )
-
-    // process the last line then continue & process that line
-    if lastLine != "" {
-      if err := c.parseSchedule( lastLine, &count ); err != nil {
-        return err
-      }
+  // process the last line then continue & process that line
+  if lastLine != "" {
+    if err := c.parseSchedule( lastLine, &count ); err != nil {
+      return err
     }
+  }
 
-    for scanner.Scan() {
-      line := scanner.Text()
-      if err := c.parseSchedule( line, &count ); err != nil {
-        return err
-      }
+  for scanner.Scan() {
+    line := scanner.Text()
+    if err := c.parseSchedule( line, &count ); err != nil {
+      return err
     }
-
-    return nil
-  }); err != nil {
-    return err
   }
 
   return nil
@@ -233,21 +174,36 @@ func (c *CIF) parseSchedule( line string, count *int ) error {
   switch line[0:2] {
     case "BS":
       *count++
-      if (*count % 25000) == 0 {
+      if (*count % 5000) == 0 {
         log.Println( "Read", *count)
+      }
+      if *count >100000 {
+        return nil
       }
       return c.parseBS( line )
 
     case "BX":
+      if *count >100000 {
+        return nil
+      }
       return c.parseBX( line )
 
     case "LO":
+      if *count >100000 {
+        return nil
+      }
       return c.parseLO( line )
 
     case "LI":
+      if *count >100000 {
+        return nil
+      }
       return c.parseLI( line )
 
     case "LT":
+      if *count >100000 {
+        return nil
+      }
       return c.parseLT( line )
 
     case "ZZ":

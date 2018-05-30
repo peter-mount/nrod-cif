@@ -7,6 +7,7 @@ import (
   "gopkg.in/robfig/cron.v2"
   "gopkg.in/yaml.v2"
   "io/ioutil"
+  "nrod"
   "path/filepath"
 )
 
@@ -25,17 +26,7 @@ type Config struct {
     CifTimetable  string    `yaml:"cifTimetable"`
   }                         `yaml:"database"`
 
-  NetworkRail struct {
-    User struct {
-      Username      string  `yaml:"username"`
-      Password      string  `yaml:"password"`
-    }                       `yaml:"user"`
-    ActiveMQ struct {
-      Server        string  `yaml:"server"`
-      Port          int     `yaml:"port"`
-      ClientId      string  `yaml:"clientId"`
-    }                       `yaml:"activeMQ"`
-  }                         `yaml:"networkrail"`
+  NetworkRail     nrod.NetworkRail `yaml:"networkrail"`
 
   Server struct {
     // Root context path, defaults to ""
@@ -63,6 +54,7 @@ type Config struct {
 
   // Cron
   Cron         *cron.Cron
+  Consul       *string
 }
 
 // ReadFile reads the provided file and imports yaml config

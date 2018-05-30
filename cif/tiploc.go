@@ -57,7 +57,10 @@ func (t *Tiploc) Read( c *codec.BinaryCodec ) {
     ReadString( &t.CRS ).
     ReadString( &t.NLCDesc ).
     ReadTime( &t.DateOfExtract )
-  
+  t.Update()
+}
+
+func (t *Tiploc) Update() {
   t.Station = t.CRS != "" && !(t.CRS[0] == 'X' || t.CRS[0] == 'Z')
 }
 

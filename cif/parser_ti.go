@@ -1,7 +1,6 @@
 package cif
 
 import (
-  "github.com/peter-mount/golib/codec"
 )
 
 func (c *CIF) parseTI( l string ) error {
@@ -22,28 +21,27 @@ func (c *CIF) parseTI( l string ) error {
 
 // Store/replace a tiploc only if the entry is newer than an existing one
 func (c *CIF) putTiploc( t *Tiploc ) error {
+  t.Update()
 
   // Link it to this CIF file
   t.DateOfExtract = c.importhd.DateOfExtract
 
-  // Retrieve the existing entry (if any)
-  b := c.tiploc.Get( []byte( t.Tiploc ) )
-
-  var e Tiploc
-  if( b != nil ) {
-    codec.NewBinaryCodecFrom( b ).Read( &e )
-  }
-
-  // If we don't have an entry or this one is newer then persist
-  if t.Tiploc != e.Tiploc || t.DateOfExtract.After( e.DateOfExtract ) {
-    //return c.put( c.tiploc, t.Tiploc, &t )
-    codec := codec.NewBinaryCodec()
-    codec.Write( t )
-    if codec.Error() != nil {
-      return codec.Error()
-    }
-
-    return c.tiploc.Put( []byte( t.Tiploc ), codec.Bytes() )
+  _, err := c.tx.Exec(
+    "INSERT INTO timetable.tiploc " +
+    "(tiploc, crs, stanox, name, nlc, nlccheck, nlcdesc, station, dateextract) " +
+    "VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    t.Tiploc,
+    t.CRS,
+    t.Stanox,
+    t.Desc,
+    t.NLC,
+    t.NLCCheck,
+    t.NLCDesc,
+    t.Station,
+    t.DateOfExtract,
+  )
+  if err != nil {
+    return err
   }
 
   return nil

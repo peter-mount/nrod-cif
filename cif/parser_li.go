@@ -1,9 +1,5 @@
 package cif
 
-import (
-  "strings"
-)
-
 func (c *CIF) parseLI( l string ) error {
   s := c.curSchedule
 
@@ -13,7 +9,6 @@ func (c *CIF) parseLI( l string ) error {
 
   // Location is Tiploc + Suffix
   i = parseString( l, i, 8, &loc.Location )
-  loc.Tiploc = strings.Trim( loc.Location[0:8], " " )
 
   i = parseHHMMS( l, i, &loc.Times.Wta )
   i = parseHHMMS( l, i, &loc.Times.Wtd )

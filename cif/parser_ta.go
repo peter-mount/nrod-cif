@@ -1,7 +1,6 @@
 package cif
 
 import (
-  "github.com/peter-mount/golib/codec"
 )
 
 func (c *CIF) parseTA( l string ) error {
@@ -21,18 +20,10 @@ func (c *CIF) parseTA( l string ) error {
   i = parseStringTrim( l, i, 7, &newTiploc )
 
   if newTiploc != "" {
-    // Remove the old entry only if it's older than the current CIF file
-    b := c.tiploc.Get( []byte( t.Tiploc ) )
 
-    var ot Tiploc
-    if( b != nil ) {
-      codec.NewBinaryCodecFrom( b ).Read( &ot )
-    }
-
-    if t.Tiploc == ot.Tiploc && c.importhd.DateOfExtract.After( ot.DateOfExtract) {
-      if err := c.tiploc.Delete( []byte( t.Tiploc ) ); err != nil {
-        return err
-      }
+    _, err := c.tx.Exec( "DELETE FROM timetable.tiploc WHERE tiploc = $1", t.Tiploc )
+    if err != nil {
+      return err
     }
 
     // Update the "new" entry to the new name

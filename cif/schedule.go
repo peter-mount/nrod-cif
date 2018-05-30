@@ -1,11 +1,12 @@
 package cif
 
 import (
+  "encoding/json"
   "encoding/xml"
   "fmt"
-  "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/golib/rest"
   "time"
+  "log"
 )
 
 // A train schedule
@@ -62,77 +63,6 @@ func ( s *Schedule ) Key() string {
   return s.ID.TrainUID + s.Runs.RunsFrom.Format( Date ) + s.ID.STPIndicator
 }
 
-// BinaryCodec writer
-func ( s *Schedule) Write( c *codec.BinaryCodec ) {
-  c.WriteString( s.ID.TrainUID ).
-    WriteTime( s.Runs.RunsFrom ).
-    WriteTime( s.Runs.RunsTo ).
-    WriteString( s.Runs.DaysRun).
-    WriteString( s.Runs.BankHolRun).
-    WriteString( s.Meta.Status).
-    WriteString( s.Meta.Category).
-    WriteString( s.ID.TrainIdentity).
-    WriteInt( s.ID.Headcode).
-    WriteInt( s.Meta.ServiceCode).
-    WriteString( s.Meta.PortionId).
-    WriteString( s.Meta.PowerType).
-    WriteString( s.Meta.TimingLoad).
-    WriteInt( s.Meta.Speed).
-    WriteString( s.Meta.OperatingCharacteristics).
-    WriteString( s.Meta.SeatingClass).
-    WriteString( s.Meta.Sleepers).
-    WriteString( s.Meta.Reservations).
-    WriteString( s.Meta.CateringCode).
-    WriteString( s.Meta.ServiceBranding).
-    WriteString( s.ID.STPIndicator).
-    WriteInt( s.Meta.UICCode).
-    WriteString( s.Meta.ATOCCode).
-    WriteBool( s.Meta.ApplicableTimetable).
-    WriteTime( s.DateOfExtract )
-
-  c.WriteInt16( int16( len( s.Locations ) ) )
-  for _, l := range s.Locations {
-    c.Write( l )
-  }
-}
-
-// BinaryCodec reader
-func ( s *Schedule) Read( c *codec.BinaryCodec ) {
-  c.ReadString( &s.ID.TrainUID ).
-    ReadTime( &s.Runs.RunsFrom ).
-    ReadTime( &s.Runs.RunsTo ).
-    ReadString( &s.Runs.DaysRun).
-    ReadString( &s.Runs.BankHolRun).
-    ReadString( &s.Meta.Status).
-    ReadString( &s.Meta.Category).
-    ReadString( &s.ID.TrainIdentity).
-    ReadInt( &s.ID.Headcode).
-    ReadInt( &s.Meta.ServiceCode).
-    ReadString( &s.Meta.PortionId).
-    ReadString( &s.Meta.PowerType).
-    ReadString( &s.Meta.TimingLoad).
-    ReadInt( &s.Meta.Speed).
-    ReadString( &s.Meta.OperatingCharacteristics).
-    ReadString( &s.Meta.SeatingClass).
-    ReadString( &s.Meta.Sleepers).
-    ReadString( &s.Meta.Reservations).
-    ReadString( &s.Meta.CateringCode).
-    ReadString( &s.Meta.ServiceBranding).
-    ReadString( &s.ID.STPIndicator).
-    ReadInt( &s.Meta.UICCode).
-    ReadString( &s.Meta.ATOCCode).
-    ReadBool( &s.Meta.ApplicableTimetable).
-    ReadTime( &s.DateOfExtract )
-
-  var l int16
-  c.ReadInt16( &l )
-  for i := 0; i < int(l); i++ {
-    loc := &Location{}
-    c.Read( loc )
-    s.Locations = append( s.Locations, loc )
-  }
-}
-
 // Equals returns true if two Schedule struts refer to the same schedule.
 // This checks the "primary key" for schedules which is TrainUID, RunsFrom & STPIndicator
 func (s *Schedule) Equals( o *Schedule ) bool {
@@ -164,30 +94,26 @@ func (c *CIF) addSchedule() error {
   // Link it to this CIF file & persist
   s.DateOfExtract = c.importhd.DateOfExtract
 
-  //
-  key := []byte( s.Key() )
-
-  var os Schedule = Schedule{}
-  b := c.schedule.Get( key )
-  dec := codec.NewBinaryCodecFrom( b )
-  dec.Read( &os )
-  if !s.Equals( &os ) || s.DateOfExtract.After( os.DateOfExtract ) {
-    enc := codec.NewBinaryCodec()
-    enc.Write( s )
-    if enc.Error() != nil {
-      return enc.Error()
-    }
-    return c.schedule.Put( key, enc.Bytes() )
+  sj, err := json.Marshal( s )
+  if err != nil {
+    return err
   }
 
-  return nil
+  _, err = c.tx.Exec( "SELECT timetable.addschedule( $1 )", sj )
+  if err != nil {
+    log.Printf( "Entry that failed:\n%s", string(sj) )
+  }
+  return err
 }
 
 func (c *CIF) deleteSchedule( s *Schedule ) error {
-
-  key := []byte( s.Key() )
-
-  return c.schedule.Delete( key )
+  _, err := c.tx.Exec(
+    "DELETE FROM timetable.schedule WHERE uid = $1 AND stp = $2 AND startdate = $3",
+    s.ID.TrainUID,
+    s.ID.STPIndicator,
+    s.Runs.RunsFrom.Format( Date ),
+  )
+  return err
 }
 
 // SetSelf sets the Schedule's Self field according to the inbound request.

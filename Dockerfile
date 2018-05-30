@@ -21,23 +21,10 @@ RUN apk add --no-cache \
 RUN mkdir -p /dest/etc &&\
     cp -rp /etc/ssl /dest/etc/
 
+ADD scripts/ /scripts/
+
 # Ensure we have the libraries - docker will cache these between builds
-RUN go get -v \
-      flag \
-      github.com/coreos/bbolt/... \
-      github.com/gorilla/mux \
-      github.com/peter-mount/golib/codec \
-      github.com/peter-mount/golib/rest \
-      github.com/peter-mount/golib/statistics \
-      github.com/peter-mount/golib/util \
-      github.com/peter-mount/nre-feeds/util \
-      gopkg.in/robfig/cron.v2 \
-      gopkg.in/yaml.v2 \
-      io/ioutil \
-      log \
-      net/http \
-      path/filepath \
-      time
+RUN /scripts/get.sh
 
 # ============================================================
 # source container contains the source as it exists within the
@@ -54,30 +41,26 @@ ARG goos
 ARG goarch
 ARG goarm
 
-# Microservice version is the commit hash from git
-RUN version="$(git rev-parse --short HEAD)" &&\
-    sed -i "s/@@version@@/${version} ${goos}(${arch})/g" bin/version.go
-
 # Build the microservice.
 # NB: CGO_ENABLED=0 forces a static build
 RUN CGO_ENABLED=0 \
     GOOS=${goos} \
     GOARCH=${goarch} \
     GOARM=${goarm} \
-    go build \
-      -o /dest/nrodcif \
-      bin/nrodcif
+    /scripts/compile.sh /dest
 
 # ============================================================
 # Finally build the final runtime container for the specific
 # microservice
-FROM scratch
+#FROM scratch
+FROM alpine
 
 # The default database directory
 Volume /database
 
 # Install our built image
-COPY --from=compiler /dest/ /
+#COPY --from=compiler /dest/ /
+COPY --from=compiler /dest/ /usr/local/bin/
 
-ENTRYPOINT ["/nrodcif"]
-CMD [ "-c", "/config.yaml"]
+#ENTRYPOINT ["/nrodcif"]
+#CMD [ "-c", "/config.yaml"]

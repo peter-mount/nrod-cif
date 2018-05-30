@@ -1,0 +1,397 @@
+{
+  "id": {
+    "uid": "C10121",
+    "stp": "P",
+    "trainIdentity": "5C99"
+  },
+  "runs": {
+    "runsFrom": "2017-12-11T00:00:00Z",
+    "runsTo": "2018-05-18T00:00:00Z",
+    "daysRun": "1111100"
+  },
+  "meta": {
+    "status": "P",
+    "category": "EE",
+    "operator": "GW",
+    "applicableTimetable": true,
+    "serviceCode": 25396002,
+    "powerType": "DMU",
+    "timingLoad": "T",
+    "speed": 90,
+    "OperatingCharacteristics": "DQ"
+  },
+  "schedule": [
+    {
+      "tpl": "RDNGTCD",
+      "time": {
+        "time": null,
+        "ptd": null,
+        "wtd": "18:39:00"
+      },
+      "activity": [
+        "TB"
+      ]
+    },
+    {
+      "tpl": "RDNGTCA",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "18:40:30"
+      }
+    },
+    {
+      "tpl": "RDNGSLJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "18:41:30"
+      },
+      "line": "URL"
+    },
+    {
+      "tpl": "TILHEJN",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "18:43:00"
+      },
+      "line": "RL"
+    },
+    {
+      "tpl": "TILHRST",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "18:43:30"
+      }
+    },
+    {
+      "tpl": "GORASTR",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "18:49:00"
+      },
+      "engAllow": "1",
+      "pathAllow": "13"
+    },
+    {
+      "tpl": "DIDCTEJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:09:00"
+      },
+      "line": "RL"
+    },
+    {
+      "tpl": "DIDCOTP",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "19:11:30",
+        "wtd": "19:14:30"
+      },
+      "plat": "3",
+      "activity": [
+        "OP",
+        "A"
+      ]
+    },
+    {
+      "tpl": "DIDCTNJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:16:30"
+      },
+      "pathAllow": "3H"
+    },
+    {
+      "tpl": "KNNGTNJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:25:30"
+      },
+      "engAllow": "1"
+    },
+    {
+      "tpl": "OXFD",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "19:29:30",
+        "wtd": "19:43:30"
+      },
+      "plat": "TL",
+      "activity": [
+        "OP",
+        "A"
+      ],
+      "pathAllow": "1"
+    },
+    {
+      "tpl": "OXFDNNJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:47:00"
+      }
+    },
+    {
+      "tpl": "OXFDWRJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:48:00"
+      }
+    },
+    {
+      "tpl": "OXFPWAY",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "19:49:30",
+        "wtd": "19:50:30"
+      },
+      "plat": "1"
+    },
+    {
+      "tpl": "BCSTRTN",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:58:00"
+      },
+      "plat": "1"
+    },
+    {
+      "tpl": "BCSTGJN",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:58:30"
+      }
+    },
+    {
+      "tpl": "BCSTSJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "19:59:30"
+      }
+    },
+    {
+      "tpl": "HADMATP",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "20:10:00"
+      },
+      "plat": "1"
+    },
+    {
+      "tpl": "PRINRIS",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "20:15:30",
+        "wtd": "20:20:30"
+      },
+      "plat": "UML",
+      "activity": [
+        "OP",
+        "A"
+      ]
+    },
+    {
+      "tpl": "SUNDRTN",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "20:24:30"
+      }
+    },
+    {
+      "tpl": "HWYCOMB",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "20:29:00"
+      },
+      "plat": "3",
+      "pathAllow": "3"
+    },
+    {
+      "tpl": "GERRDSX",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "20:39:30"
+      },
+      "plat": "2",
+      "pathAllow": "H"
+    },
+    {
+      "tpl": "WRUISLP",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "20:45:00",
+        "wtd": "20:58:00"
+      },
+      "plat": "TL",
+      "activity": [
+        "OP",
+        "A"
+      ]
+    },
+    {
+      "tpl": "SRUISLP",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:01:00"
+      }
+    },
+    {
+      "tpl": "GFORDWJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:04:30"
+      }
+    },
+    {
+      "tpl": "GFORDEJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:05:30"
+      }
+    },
+    {
+      "tpl": "PROY",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:12:00"
+      },
+      "engAllow": "1"
+    },
+    {
+      "tpl": "OLDOKCW",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "21:16:00",
+        "wtd": "21:16:30"
+      },
+      "activity": [
+        "OP"
+      ]
+    },
+    {
+      "tpl": "OLDORL",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "21:19:30",
+        "wtd": "21:24:00"
+      },
+      "activity": [
+        "OP",
+        "A"
+      ],
+      "line": "RL1"
+    },
+    {
+      "tpl": "OLDOKCE",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:26:00"
+      },
+      "line": "ECL"
+    },
+    {
+      "tpl": "LDBRKJ",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:31:00"
+      },
+      "line": "1",
+      "path": "ECL"
+    },
+    {
+      "tpl": "PRTOBJP",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wtp": "21:32:00"
+      },
+      "line": "1"
+    },
+    {
+      "tpl": "ROYAOSD",
+      "time": {
+        "time": null,
+        "pta": null,
+        "ptd": null,
+        "wta": "21:34:00",
+        "wtd": "21:36:00"
+      },
+      "activity": [
+        "OP",
+        "A"
+      ]
+    },
+    {
+      "tpl": "PADTON",
+      "time": {
+        "time": null,
+        "pta": null,
+        "wta": "21:39:00"
+      },
+      "plat": "1",
+      "activity": [
+        "TF"
+      ]
+    }
+  ],
+  "date": "2018-05-18T19:58:00Z"
+}

@@ -1,8 +1,8 @@
 package cif
 
 import (
-  "github.com/peter-mount/golib/codec"
   "github.com/peter-mount/nre-feeds/util"
+  "strings"
 )
 
 // A representation of a location within a schedule.
@@ -41,6 +41,7 @@ type Location struct {
   // Tiploc of this location. For some schedules like circular routes this can
   // appear more than once in a schedule.
   Tiploc      string        `json:"tpl" xml:"tpl,attr"`
+  Visit       int           `json:"visit,omitempty" xml:"visit,attr,omitempty"`
   // Public Timetable
   Times       util.CircularTimes `json:"time"`
   // Platform
@@ -57,36 +58,25 @@ type Location struct {
   PerfAllow   string        `json:"perfAllow,omitempty" xml:"perfAllow,attr,omitempty"`
 }
 
-// BinaryCodec writer
-func (l *Location) Write( c *codec.BinaryCodec ) {
-  c.WriteString( l.Id ).
-    WriteString( l.Location ).
-    WriteString( l.Tiploc ).
-    Write( &l.Times ).
-    WriteString( l.Platform ).
-    WriteStringArray( l.Activity ).
-    WriteString( l.Line ).
-    WriteString( l.Path ).
-    WriteString( l.EngAllow ).
-    WriteString( l.PathAllow ).
-    WriteString( l.PerfAllow )
-}
-
-// BinaryCodec reader
-func (l *Location) Read( c *codec.BinaryCodec ) {
-  c.ReadString( &l.Id ).
-    ReadString( &l.Location ).
-    ReadString( &l.Tiploc ).
-    Read( &l.Times ).
-    ReadString( &l.Platform ).
-    ReadStringArray( &l.Activity ).
-    ReadString( &l.Line ).
-    ReadString( &l.Path ).
-    ReadString( &l.EngAllow ).
-    ReadString( &l.PathAllow ).
-    ReadString( &l.PerfAllow )
-}
-
 func (s *Schedule) appendLocation(l *Location) {
+  // Used in parsing, set tiploc & Visit accordingly
+  if l.Tiploc == "" && l.Location != "" {
+    l.Tiploc = strings.Trim( l.Location[0:7], " " )
+    if len( l.Location ) > 7 && l.Location[7] != ' ' {
+      l.Visit = int( l.Location[7] - '0' )
+    }
+    l.Location = strings.Trim( l.Location, " " )
+  }
+
+  if l.Times.Pta != nil && (*l.Times.Pta).IsZero() {
+    l.Times.Pta = nil
+  }
+
+  if l.Times.Ptd != nil && (*l.Times.Ptd).IsZero() {
+    l.Times.Ptd = nil
+  }
+
+  l.Times.UpdateTime()
+
   s.Locations = append( s.Locations, l )
 }

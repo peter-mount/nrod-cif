@@ -18,18 +18,23 @@ func RunApplication( app func( *Config ) ( func(), error ) ) {
   log.Printf( "%s %s %s(%s)", os.Args[0], VERSION, runtime.GOOS, runtime.GOARCH )
 
   configFile := flag.String( "c", "", "The config file to use" )
+  consul := flag.Bool( "consul", false, "Read config from consul" )
 
   flag.Parse()
 
-  if *configFile == "" {
+  if *configFile == "" && !*consul {
     log.Fatal( "No default config defined, provide with -c" )
   }
 
   config := &Config{}
 
-  if err := config.readFile( *configFile ); err != nil {
-    log.Fatal( err )
+  if *configFile != "" {
+    if err := config.readFile( *configFile ); err != nil {
+      log.Fatal( err )
+    }
   }
+
+  config.Consul = consul
 
   if err := config.initCron(); err != nil {
     log.Fatal( err )
