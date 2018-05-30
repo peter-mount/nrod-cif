@@ -86,9 +86,9 @@ CREATE TRIGGER scheddeleted
 
 -- ======================================================================
 
-DROP FUNCTION timetable.schedules( CHAR(3), TIME with time zone, TIME with time zone);
+DROP FUNCTION timetable.schedules( CHAR(3), TIMESTAMP with time zone, INTERVAL);
 
-CREATE OR REPLACE FUNCTION timetable.schedules( pcrs CHAR(3), pst TIMESTAMP WITH TIME ZONE, pet TIMESTAMP WITH TIME ZONE )
+CREATE OR REPLACE FUNCTION timetable.schedules( pcrs CHAR(3), pst TIMESTAMP WITH TIME ZONE, dur INTERVAL )
 RETURNS SETOF timetable.station AS $$
 DECLARE
   ts TIMESTAMP WITHOUT TIME ZONE;
@@ -102,18 +102,19 @@ BEGIN
   sd = (ts::TEXT)::DATE;
   st = (ts::TEXT)::TIME;
 
-  IF pet IS NULL THEN
+  IF dur IS NULL OR dur < '0'::INTERVAL OR dur > '6 hours'::INTERVAL THEN
     ts = ts + '1 hour'::INTERVAL;
   ELSE
-    ts = (pet AT TIME ZONE 'Europe/London'::TEXT)::TIMESTAMP WITHOUT TIME ZONE;
+    ts = ts + dur;
   END IF;
   ed = (ts::TEXT)::DATE;
   et = (ts::TEXT)::TIME;
 
-  RETURN QUERY
+  IF st < et THEN
+    RETURN QUERY
     WITH tpls AS (
       SELECT * FROM timetable.tiploc t
-        WHERE stanox IN ( SELECT stanox FROM timetable.tiploc t2 WHERE crs = pCrs )
+      WHERE stanox IN ( SELECT stanox FROM timetable.tiploc t2 WHERE crs = pCrs )
     )
     SELECT s.*
       FROM timetable.station s
@@ -122,6 +123,23 @@ BEGIN
         AND s.startdate <= sd
         AND s.enddate >=ed
       ORDER BY s.time, s.sid;
+  ELSE
+    RETURN QUERY
+    WITH tpls AS (
+      SELECT * FROM timetable.tiploc t
+      WHERE stanox IN ( SELECT stanox FROM timetable.tiploc t2 WHERE crs = pCrs )
+    )
+    SELECT s.*
+      FROM timetable.station s
+      WHERE s.tid IN (SELECT id FROM tpls)
+        AND (
+          s.time BETWEEN st AND '24:00'::TIME
+          OR s.time BETWEEN '00:00'::TIME AND et
+        )
+        AND s.startdate <= sd
+        AND s.enddate >=sd
+      ORDER BY s.time, s.sid;
+  END IF;
 END;
 $$ LANGUAGE PLPGSQL;
 
