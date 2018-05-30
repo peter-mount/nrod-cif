@@ -138,7 +138,7 @@ BEGIN
         )
         AND s.startdate <= sd
         AND s.enddate >=sd
-      ORDER BY s.time, s.sid;
+      ORDER BY s.time <= et, s.time, s.sid;
   END IF;
 END;
 $$ LANGUAGE PLPGSQL;
