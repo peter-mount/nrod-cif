@@ -90,21 +90,24 @@ CREATE TRIGGER scheddeleted
 
 -- ======================================================================
 
-DROP FUNCTION timetable.schedules( CHAR(3), TIMESTAMP with time zone, INTERVAL);
+-- DROP FUNCTION timetable.schedules( CHAR(3), TIMESTAMP with time zone, INTERVAL);
 
 CREATE OR REPLACE FUNCTION timetable.schedules( pcrs CHAR(3), pst TIMESTAMP WITH TIME ZONE, dur INTERVAL )
 RETURNS SETOF timetable.station AS $$
 DECLARE
-  ts TIMESTAMP WITHOUT TIME ZONE;
-  sd DATE;
-  ed DATE;
-  st TIME;
-  et TIME;
+  ts    TIMESTAMP WITHOUT TIME ZONE;
+  sd    DATE;
+  ed    DATE;
+  st    TIME;
+  et    TIME;
+  dow1  INTEGER;
+  dow2  INTEGER;
 BEGIN
   -- Ensure we use the correct time of day during the summer
   ts = (pst AT TIME ZONE 'Europe/London'::TEXT)::TIMESTAMP WITHOUT TIME ZONE;
   sd = (ts::TEXT)::DATE;
   st = (ts::TEXT)::TIME;
+  dow1 = 1 << EXTRACT( DOW FROM ts )::INTEGER;
 
   IF dur IS NULL OR dur < '0'::INTERVAL OR dur > '6 hours'::INTERVAL THEN
     ts = ts + '1 hour'::INTERVAL;
@@ -113,6 +116,7 @@ BEGIN
   END IF;
   ed = (ts::TEXT)::DATE;
   et = (ts::TEXT)::TIME;
+  dow2 = 1 << EXTRACT( DOW FROM ts )::INTEGER;
 
   IF st < et THEN
     RETURN QUERY
@@ -126,6 +130,7 @@ BEGIN
         AND s.time BETWEEN st AND et
         AND s.startdate <= sd
         AND s.enddate >=ed
+        AND (s.dow & dow1) = dow1
       ORDER BY s.time, s.sid;
   ELSE
     RETURN QUERY
@@ -142,6 +147,7 @@ BEGIN
         )
         AND s.startdate <= sd
         AND s.enddate >=sd
+        AND ( (s.dow & dow1) = dow1 OR (s.dow & dow2) = dow2 )
       ORDER BY s.time <= et, s.time, s.sid;
   END IF;
 END;
