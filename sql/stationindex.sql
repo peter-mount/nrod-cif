@@ -10,11 +10,15 @@ DECLARE
   vsid    BIGINT;
   step    JSON;
   vord    SMALLINT;
+  vstp    CHAR;
   sdt     DATE;
   edt     DATE;
+  vdow    SMALLINT;
 BEGIN
+  vstp := pSched->'id'->>'stp';
   sdt := (pSched->'runs'->>'runsFrom')::DATE;
   edt := (pSched->'runs'->>'runsTo')::DATE;
+  vdow := (pSched->'runs'->>'daysRun')::BIT(7)::INTEGER::SMALLINT;
 
   INSERT INTO timetable.schedule
     ( uid, stp, startdate, enddate, entrydate )
@@ -48,10 +52,10 @@ BEGIN
       -- we only index against the public timetable
       IF step->'time'->>'pta' IS NOT NULL OR step->'time'->>'ptd' IS NOT NULL THEN
         INSERT INTO timetable.station
-          ( sid, ord, tid, startdate, enddate, time )
+          ( sid, ord, tid, stp, startdate, enddate, dow, time )
           VALUES (
-            vsid, vord, timetable.gettiplocid( step->> 'tpl' ),
-            sdt, edt,
+            vsid, vord, timetable.gettiplocid( step->> 'tpl' ), vstp,
+            sdt, edt, vdow,
             (step->'time'->>'time')::TIME
           );
         vord := vord + 1;

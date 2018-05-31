@@ -1,6 +1,7 @@
 package cif
 
 import (
+  "log"
 )
 
 func (c *CIF) parseTI( l string ) error {
@@ -41,6 +42,7 @@ func (c *CIF) putTiploc( t *Tiploc ) error {
     t.DateOfExtract,
   )
   if err != nil {
+    log.Printf( "Failed to insert tiploc %s", t.Tiploc )
     return err
   }
 

@@ -5,7 +5,7 @@
 
 CREATE SCHEMA IF NOT EXISTS timetable;
 
-DROP TABLE timetable.station;
+DROP TABLE timetable.station CASCADE;
 DROP TABLE timetable.schedule_json;
 DROP TABLE timetable.schedule;
 DROP TABLE timetable.tiploc;
@@ -98,8 +98,13 @@ CREATE TABLE timetable.station (
   sid         BIGINT NOT NULL REFERENCES timetable.schedule(id),
   ord         SMALLINT NOT NULL,
   tid         BIGINT NOT NULL,
+  stp         CHAR NOT NULL,
+  -- used in searches, the date range for this entry
   startdate   DATE NOT NULL,
   enddate     DATE NOT NULL,
+  -- The days of the week it's valid for
+  dow         SMALLINT NOT NULL,
+  -- The time of the day at this point
   time        TIME NOT NULL,
   PRIMARY KEY (sid, ord, tid)
 );
