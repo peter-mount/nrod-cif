@@ -1,15 +1,11 @@
 package cif
 
 import (
-  "encoding/xml"
-  "fmt"
-  "github.com/peter-mount/golib/rest"
   "time"
 )
 
 // A train schedule
 type Schedule struct {
-  XMLName                   xml.Name  `json:"-" xml:"schedule"`
   ID struct {
     // The train UID
     TrainUID                  string    `json:"uid" xml:"uid,attr"`
@@ -63,15 +59,4 @@ func (s *Schedule) Equals( o *Schedule ) bool {
     return false
   }
   return s.ID.TrainUID == o.ID.TrainUID && s.Runs.RunsFrom == o.Runs.RunsFrom && s.ID.STPIndicator == o.ID.STPIndicator
-}
-
-// SetSelf sets the Schedule's Self field according to the inbound request.
-// The resulting URL should then refer back to the rest endpoint that would
-// return this Schedule.
-func (s *Schedule) SetSelf( r *rest.Rest ) {
-  s.Self = r.Self( fmt.Sprintf(
-    "/schedule/%s/%s/%s",
-    s.ID.TrainUID,
-    s.Runs.RunsFrom.Format( Date ),
-    s.ID.STPIndicator ) )
 }

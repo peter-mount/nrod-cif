@@ -15,6 +15,13 @@ func (c *CIFImporter) cluster() error {
     return err
   }
 
+  // Cluster associations
+  log.Println( "Clustering associations" )
+  _, err = c.db.Exec( "CLUSTER timetable.assoc USING assoc_cluster" )
+  if err != nil {
+    return err
+  }
+
   // Cluster schedules on their uid so we have all related schedules together.
   log.Println( "Clustering schedules" )
   _, err = c.db.Exec( "CLUSTER timetable.schedule USING schedule_uid" )

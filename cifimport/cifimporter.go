@@ -26,6 +26,10 @@ type CIFImporter struct {
   //
   curSchedule  *cif.Schedule
   update        bool
+  // Maintenance Mode
+  maintenance  *bool
+  forceExpire  *bool
+  forceVacuum  *bool
 }
 
 func (a *CIFImporter) Name() string {
@@ -33,6 +37,10 @@ func (a *CIFImporter) Name() string {
 }
 
 func (a *CIFImporter) Init( k *kernel.Kernel ) error {
+  a.maintenance = flag.Bool( "m", false, "Same as -expire -vacuum" )
+  a.forceExpire = flag.Bool( "expire", false, "Remove expired entries" )
+  a.forceVacuum = flag.Bool( "vacuum", false, "Vacuum & recluster the database" )
+
   dbservice, err := k.AddService( &db.DBService{} )
   if err != nil {
     return err
@@ -46,7 +54,12 @@ func (a *CIFImporter) PostInit() error {
 
   // Fail if we have no CIF files in the command line
   a.files = flag.Args()
-  if len( a.files ) == 0 {
+
+  if *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) {
+    if len( a.files ) > 0 {
+      return fmt.Errorf( "CIF files not permitted in maintenance mode" )
+    }
+  } else if len( a.files ) == 0 {
     return fmt.Errorf( "CIF files required" )
   }
 
@@ -63,39 +76,50 @@ func (a *CIFImporter) Start() error {
 
 func (a *CIFImporter) Run() error {
 
-  // Do a cleanup first
-  err := a.cleanup( false )
-  if err != nil {
-    return err
-  }
-
   fileCount := 0
 
-  for _, file := range a.files {
-
-    log.Printf( "Parsing %s", file )
-
-    f, err := os.Open( file )
+  // Normal mode, cleanup & import CIF files
+  if !( *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) ) {
+    // Do a cleanup first as it will remove expired entries freeing up some space
+    err := a.cleanup()
     if err != nil {
       return err
     }
-    defer f.Close()
 
-    skip, err := a.importCIF( f )
-    if err != nil {
-      if skip {
-        // Non fatal error so log it but don't kill the import
-        log.Println( err )
-      } else {
+    for _, file := range a.files {
+
+      log.Printf( "Parsing %s", file )
+
+      f, err := os.Open( file )
+      if err != nil {
         return err
       }
-    } else {
-      fileCount ++;
+      defer f.Close()
+
+      skip, err := a.importCIF( f )
+      if err != nil {
+        if skip {
+          // Non fatal error so log it but don't kill the import
+          log.Println( err )
+        } else {
+          return err
+        }
+      } else {
+        fileCount ++;
+      }
     }
   }
 
-  if fileCount > 0 {
-    err = a.cleanup( true )
+  // Do maintenance if in maintenance mode or we imported at least 1 CIF file
+  if *(a.maintenance) || *(a.forceExpire) || fileCount > 0 {
+    err := a.cleanup()
+    if err != nil {
+      return err
+    }
+  }
+
+  if *(a.maintenance) || *(a.forceVacuum) || fileCount > 0 {
+    err := a.vacuum()
     if err != nil {
       return err
     }
@@ -106,7 +130,12 @@ func (a *CIFImporter) Run() error {
     }
   }
 
-  log.Println( "Import complete" )
+  if *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) {
+    log.Println( "Maintenance complete" )
+  } else {
+    log.Println( "Import complete" )
+  }
+
   return nil
 }
 

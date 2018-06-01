@@ -65,6 +65,9 @@ BEGIN
     -- Catches any orphaned entries - this should not occur
     DELETE FROM timetable.station;
 
+    -- Associations
+    DELETE FROM timetable.assoc;
+
     -- Remove tiplocs
     DELETE FROM timetable.tiploc;
 

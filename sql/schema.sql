@@ -8,6 +8,7 @@ CREATE SCHEMA IF NOT EXISTS timetable;
 DROP TABLE timetable.station CASCADE;
 DROP TABLE timetable.schedule_json;
 DROP TABLE timetable.schedule;
+DROP TABLE timetable.assoc;
 DROP TABLE timetable.tiploc;
 DROP TABLE timetable.cif;
 
@@ -121,3 +122,35 @@ CREATE INDEX station_td ON timetable.station(tid,startdate,enddate);
 CREATE INDEX station_tdt ON timetable.station(tid,startdate,enddate,time);
 CREATE INDEX station_tt ON timetable.station(tid,time);
 --CREATE INDEX station_io ON timetable.station(scheduleId,ord);
+
+-- Schedule associations
+CREATE TABLE timetable.assoc (
+  id          SERIAL NOT NULL,
+  mainuid     CHAR(6) NOT NULL,
+  assocuid    CHAR(6) NOT NULL,
+  stp         CHAR NOT NULL,
+  startdate   DATE NOT NULL,
+  enddate     DATE NOT NULL,
+  dow         SMALLINT NOT NULL,
+  cat         CHAR(2) NOT NULL,
+  dateInd     CHAR NOT NULL,
+  tid         BIGINT NOT NULL,
+  baseSuffix  CHAR NOT NULL,
+  assocSuffix CHAR NOT NULL,
+  assocType   CHAR NOT NULL,
+  -- entry date so we can optimise updates
+  entrydate   DATE NOT NULL,
+  PRIMARY KEY( mainuid, assocuid, startdate, stp )
+);
+
+CREATE INDEX assoc_m ON timetable.assoc(mainuid);
+CREATE INDEX assoc_a ON timetable.assoc(assocuid);
+CREATE INDEX assoc_ma ON timetable.assoc(mainuid,assocuid);
+
+CREATE INDEX assoc_mss ON timetable.assoc(mainuid,startdate,stp);
+CREATE INDEX assoc_mses ON timetable.assoc(mainuid,startdate,enddate,stp);
+
+CREATE INDEX assoc_ass ON timetable.assoc(assocuid,startdate,stp);
+CREATE INDEX assoc_ases ON timetable.assoc(assocuid,startdate,enddate,stp);
+
+CREATE INDEX assoc_cluster ON timetable.assoc(mainuid,assocuid,stp);

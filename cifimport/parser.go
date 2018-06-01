@@ -74,6 +74,11 @@ func (c *CIFImporter) parseFile( scanner *bufio.Scanner ) (bool, error) {
       return err
     }
 
+    lastLine, err = c.parseAssociations( scanner, lastLine )
+    if err != nil {
+      return err
+    }
+
     err = c.parseSchedules( scanner, lastLine )
     if err != nil {
       return err
@@ -142,6 +147,44 @@ func (c *CIFImporter) parseTiploc( line string ) ( bool, error ) {
       return false, c.parseTD( line )
 
     // If not a Tiploc record then bail out to the next stage
+    default:
+      return true, nil
+  }
+}
+
+// Parses the rest of the file after the header
+func (c *CIFImporter) parseAssociations( scanner *bufio.Scanner, lastLine string ) ( string, error ) {
+  log.Println( "Parsing Associations" )
+
+  line := lastLine
+
+  // process the last line then continue & process that line
+  if line != "" {
+    if bail, err := c.parseAssociation( line ); err != nil {
+      return "", err
+    } else if bail {
+      return line, nil
+    }
+  }
+
+  for scanner.Scan() {
+    line = scanner.Text()
+    if bail, err := c.parseAssociation( line ); err != nil {
+      return "", err
+    } else if bail {
+      return line, nil
+    }
+  }
+
+  return line, nil
+}
+
+func (c *CIFImporter) parseAssociation( line string ) ( bool, error ) {
+  switch line[0:2] {
+    case "AA":
+      return false, c.parseAA( line )
+
+    // Ignore any unsupported records
     default:
       return true, nil
   }
