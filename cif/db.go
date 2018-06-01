@@ -78,13 +78,19 @@ func (c *CIF) Cleanup( vacuum bool ) error {
   if vacuum {
     log.Println( "Compacting tiplocs" )
     _, err = c.db.Exec( "VACUUM FULL timetable.tiploc" )
-    return err
+    if err != nil {
+      return err
+    }
 
     log.Println( "Compacting schedules" )
     _, err = c.db.Exec( "VACUUM FULL timetable.schedule" )
-    return err
+    if err != nil {
+      return err
+    }
     _, err = c.db.Exec( "VACUUM FULL timetable.schedule_json" )
-    return err
+    if err != nil {
+      return err
+    }
 
     log.Println( "Compacting station index" )
     _, err = c.db.Exec( "VACUUM FULL timetable.station" )
