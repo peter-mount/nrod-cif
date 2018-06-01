@@ -58,7 +58,7 @@ type Location struct {
   PerfAllow   string        `json:"perfAllow,omitempty" xml:"perfAllow,attr,omitempty"`
 }
 
-func (s *Schedule) appendLocation(l *Location) {
+func (s *Schedule) AppendLocation(l *Location) {
   // Used in parsing, set tiploc & Visit accordingly
   if l.Tiploc == "" && l.Location != "" {
     l.Tiploc = strings.Trim( l.Location[0:7], " " )

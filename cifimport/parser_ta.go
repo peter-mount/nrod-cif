@@ -1,10 +1,11 @@
-package cif
+package cifimport
 
 import (
+  "cif"
 )
 
-func (c *CIF) parseTA( l string ) error {
-  var t Tiploc = Tiploc{}
+func (c *CIFImporter) parseTA( l string ) error {
+  var t cif.Tiploc = cif.Tiploc{}
   i := 2
   i = parseStringTrim( l, i, 7, &t.Tiploc )
   i += 2

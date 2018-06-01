@@ -1,4 +1,4 @@
-package cif
+package cifimport
 
 import (
   "fmt"
@@ -25,7 +25,7 @@ type HD struct {
 
 // Parse HD record
 // returns true if the file should be imported
-func (c *CIF) parseHD( l string ) ( bool, error ) {
+func (c *CIFImporter) parseHD( l string ) ( bool, error ) {
   var h *HD = &HD{}
 
   i := 0

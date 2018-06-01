@@ -1,4 +1,4 @@
-package cif
+package cifimport
 
 import (
   "github.com/peter-mount/nre-feeds/util"

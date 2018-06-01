@@ -1,9 +1,13 @@
-package cif
+package cifimport
 
-func (c *CIF) parseLT( l string ) error {
+import (
+  "cif"
+)
+
+func (c *CIFImporter) parseLT( l string ) error {
   s := c.curSchedule
 
-  var loc *Location = &Location{}
+  var loc *cif.Location = &cif.Location{}
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 
@@ -18,7 +22,7 @@ func (c *CIF) parseLT( l string ) error {
   i = parseStringTrim( l, i, 3, &loc.Path )
   i = parseActivity( l, i, &loc.Activity )
 
-  s.appendLocation( loc )
+  s.AppendLocation( loc )
 
   return nil
 }

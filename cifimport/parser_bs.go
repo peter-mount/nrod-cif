@@ -1,6 +1,10 @@
-package cif
+package cifimport
 
-func (c *CIF ) parseBS( l string ) error {
+import (
+  "cif"
+)
+
+func (c *CIFImporter ) parseBS( l string ) error {
 
   // Persist the last schedule as its now complete
   if err := c.addSchedule(); err != nil {
@@ -25,8 +29,8 @@ func (c *CIF ) parseBS( l string ) error {
   return nil
 }
 
-func (c *CIF ) parseBSNew( l string, update bool ) {
-  s := &Schedule{}
+func (c *CIFImporter ) parseBSNew( l string, update bool ) {
+  s := &cif.Schedule{}
   c.curSchedule = s
   c.update = update
 
@@ -59,10 +63,10 @@ func (c *CIF ) parseBSNew( l string, update bool ) {
   i = parseString( l, i, 1, &s.ID.STPIndicator )
 }
 
-func (c *CIF ) parseBSDelete( l string ) *Schedule {
+func (c *CIFImporter ) parseBSDelete( l string ) *cif.Schedule {
   c.curSchedule = nil
 
-  var s Schedule = Schedule{}
+  var s cif.Schedule = cif.Schedule{}
 
   i :=2
   i++ // tx

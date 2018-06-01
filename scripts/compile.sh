@@ -8,5 +8,5 @@ for bin in \
   cifimport
 do
   echo "Building ${bin}"
-  go build -o ${DEST}/${bin} ${bin}
+  go build -o ${DEST}/${bin} ${bin}/bin
 done

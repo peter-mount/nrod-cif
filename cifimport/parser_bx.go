@@ -1,6 +1,6 @@
-package cif
+package cifimport
 
-func (c *CIF ) parseBX( l string ) error {
+func (c *CIFImporter ) parseBX( l string ) error {
   s := c.curSchedule
 
   i := 2

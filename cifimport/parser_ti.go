@@ -1,11 +1,12 @@
-package cif
+package cifimport
 
 import (
+  "cif"
   "log"
 )
 
-func (c *CIF) parseTI( l string ) error {
-  var t Tiploc = Tiploc{}
+func (c *CIFImporter) parseTI( l string ) error {
+  var t cif.Tiploc = cif.Tiploc{}
   i := 2
   i = parseStringTrim( l, i, 7, &t.Tiploc )
   i += 2
@@ -21,7 +22,7 @@ func (c *CIF) parseTI( l string ) error {
 }
 
 // Store/replace a tiploc only if the entry is newer than an existing one
-func (c *CIF) putTiploc( t *Tiploc ) error {
+func (c *CIFImporter) putTiploc( t *cif.Tiploc ) error {
   t.Update()
 
   // Link it to this CIF file

@@ -1,4 +1,4 @@
-package cif
+package cifimport
 
 import (
   "database/sql"
@@ -12,7 +12,7 @@ import (
 
 // ImportFile imports a uncompressed CIF file retrieved from NetworkRail
 // into the cif database.
-func (c *CIF) ImportFile( fname string ) (bool, error) {
+func (c *CIFImporter) importFile( fname string ) (bool, error) {
   file,err := os.Open( fname )
   if err != nil {
     return false, err
@@ -20,7 +20,7 @@ func (c *CIF) ImportFile( fname string ) (bool, error) {
 
   defer file.Close()
 
-  skip, err := c.ImportCIF( file )
+  skip, err := c.importCIF( file )
   return skip, err
 }
 
@@ -37,7 +37,7 @@ func (c *CIF) ImportFile( fname string ) (bool, error) {
 // SCHEDULE Import schedules
 //
 // ALL      Import everything, the default and the same as TIPLOC | SCHEDULE
-func (c *CIF) ImportCIF( r io.Reader ) (bool, error) {
+func (c *CIFImporter) importCIF( r io.Reader ) (bool, error) {
   scanner := bufio.NewScanner( r )
 
   if skip, err := c.parseFile( scanner ); err != nil {
@@ -51,7 +51,7 @@ func (c *CIF) ImportCIF( r io.Reader ) (bool, error) {
   return true, nil
 }
 
-func (c *CIF) parseFile( scanner *bufio.Scanner ) (bool, error) {
+func (c *CIFImporter) parseFile( scanner *bufio.Scanner ) (bool, error) {
 
   var skip bool
 
@@ -85,7 +85,7 @@ func (c *CIF) parseFile( scanner *bufio.Scanner ) (bool, error) {
 }
 
 // Sets the CIF structure up to the current transaction
-func (c *CIF) parserInit( tx *sql.Tx ) {
+func (c *CIFImporter) parserInit( tx *sql.Tx ) {
   c.tx = tx
   c.curSchedule = nil
   c.update = false
@@ -93,7 +93,7 @@ func (c *CIF) parserInit( tx *sql.Tx ) {
 
 // Looks for the initial HD record
 // If the CIF is for a full import then reset the DB
-func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) ( bool, error ) {
+func (c *CIFImporter) parseFileHeader( scanner *bufio.Scanner ) ( bool, error ) {
   if scanner.Scan() {
 
     line := scanner.Text()
@@ -113,7 +113,7 @@ func (c *CIF) parseFileHeader( scanner *bufio.Scanner ) ( bool, error ) {
 }
 
 // Parses the rest of the file after the header
-func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
+func (c *CIFImporter) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
   log.Println( "Parsing Tiploc's" )
 
   var line string
@@ -130,7 +130,7 @@ func (c *CIF) parseTiplocs( scanner *bufio.Scanner ) ( string, error ) {
   return line, nil
 }
 
-func (c *CIF) parseTiploc( line string ) ( bool, error ) {
+func (c *CIFImporter) parseTiploc( line string ) ( bool, error ) {
   switch line[0:2] {
     case "TI":
       return false, c.parseTI( line )
@@ -148,7 +148,7 @@ func (c *CIF) parseTiploc( line string ) ( bool, error ) {
 }
 
 // Parses the rest of the file after the header
-func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
+func (c *CIFImporter) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   log.Println( "Parsing Schedules" )
 
   count := 0
@@ -170,7 +170,7 @@ func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   return nil
 }
 
-func (c *CIF) parseSchedule( line string, count *int ) error {
+func (c *CIFImporter) parseSchedule( line string, count *int ) error {
   switch line[0:2] {
     case "BS":
       *count++

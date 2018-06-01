@@ -1,6 +1,6 @@
-package cif
+package cifimport
 
-func (c *CIF) parseZZ() error {
+func (c *CIFImporter) parseZZ() error {
 
     // Save last schedule
     if err := c.addSchedule(); err != nil {
