@@ -170,6 +170,8 @@ func (c *CIF) parseSchedules( scanner *bufio.Scanner, lastLine string ) error {
   return nil
 }
 
+const maxSched int = 200000
+
 func (c *CIF) parseSchedule( line string, count *int ) error {
   switch line[0:2] {
     case "BS":
@@ -177,31 +179,31 @@ func (c *CIF) parseSchedule( line string, count *int ) error {
       if (*count % 5000) == 0 {
         log.Println( "Read", *count)
       }
-      if *count >100000 {
+      if *count >maxSched {
         return nil
       }
       return c.parseBS( line )
 
     case "BX":
-      if *count >100000 {
+      if *count >maxSched {
         return nil
       }
       return c.parseBX( line )
 
     case "LO":
-      if *count >100000 {
+      if *count >maxSched {
         return nil
       }
       return c.parseLO( line )
 
     case "LI":
-      if *count >100000 {
+      if *count >maxSched {
         return nil
       }
       return c.parseLI( line )
 
     case "LT":
-      if *count >100000 {
+      if *count >maxSched {
         return nil
       }
       return c.parseLT( line )

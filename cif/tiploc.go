@@ -61,7 +61,8 @@ func (t *Tiploc) Read( c *codec.BinaryCodec ) {
 }
 
 func (t *Tiploc) Update() {
-  t.Station = t.CRS != "" && !(t.CRS[0] == 'X' || t.CRS[0] == 'Z')
+  // Tiploc is a station IF it has a stanox, crs & crs not start with X or Z
+  t.Station = t.Stanox > 0 &&t.CRS != "" && !(t.CRS[0] == 'X' || t.CRS[0] == 'Z')
 }
 
 // String returns a human readable version of a Tiploc

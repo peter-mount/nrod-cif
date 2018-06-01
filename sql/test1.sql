@@ -1,3 +1,0 @@
-SELECT timetable.addschedule(
-  '{"id":{"uid":"C10120","stp":"P","trainIdentity":"5C99"},"runs":{"runsFrom":"2017-12-11T00:00:00Z","runsTo":"2018-05-18T00:00:00Z","daysRun":"1111100"},"meta":{"status":"P","category":"EE","operator":"GW","applicableTimetable":true,"serviceCode":25396002,"powerType":"D","timingLoad":"350","speed":75,"OperatingCharacteristics":"D"},"schedule":[{"tpl":"PENZNCE","time":{"time":null,"ptd":null,"wtd":"09:15:00"},"plat":"4","activity":["TB","PR"]},{"tpl":"PENZTMD","time":{"time":null,"pta":null,"wta":"09:30:00"},"activity":["TF"]}],"date":"2018-05-18T19:58:00Z"}'::JSON
-);

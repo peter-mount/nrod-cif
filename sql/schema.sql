@@ -65,6 +65,10 @@ CREATE INDEX tiploc_name
   ON timetable.tiploc(name)
   WHERE name IS NOT NULL;
 
+-- Used for clustering
+CREATE UNIQUE INDEX tiploc_cluster
+  ON timetable.tiploc(stanox, tiploc);
+
 -- schedule contains the searchable details of a schedule
 CREATE TABLE timetable.schedule (
   id          SERIAL NOT NULL,
@@ -74,6 +78,8 @@ CREATE TABLE timetable.schedule (
   startdate   DATE NOT NULL,
   -- end date so we can search by date range
   enddate     DATE NOT NULL,
+  -- The days of the week it's valid for
+  dow         SMALLINT NOT NULL,
   -- entry date so we can optimise updates
   entrydate   DATE NOT NULL,
   PRIMARY KEY( uid, stp, startdate )
