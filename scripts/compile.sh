@@ -9,5 +9,5 @@ for bin in \
   cifrest
 do
   echo "Building ${bin}"
-  go build -o ${DEST}/${bin} ${bin}/bin
+  go build -o ${DEST}/${bin} github.com/peter-mount/nrod-cif/${bin}/bin
 done

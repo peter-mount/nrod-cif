@@ -1,7 +1,7 @@
 package cifrest
 
 import (
-  "cif"
+  "github.com/peter-mount/nrod-cif/cif"
   "fmt"
   "github.com/peter-mount/golib/kernel"
   "github.com/peter-mount/golib/kernel/db"

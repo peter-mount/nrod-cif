@@ -1,8 +1,8 @@
 package main
 
 import (
-  "cifrest"
   "github.com/peter-mount/golib/kernel"
+  "github.com/peter-mount/nrod-cif/cifrest"
   "log"
 )
 

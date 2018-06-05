@@ -2,7 +2,7 @@
 package cifimport
 
 import (
-  "cif"
+  "github.com/peter-mount/nrod-cif/cif"
   "database/sql"
   "flag"
   "fmt"

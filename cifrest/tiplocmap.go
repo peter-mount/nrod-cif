@@ -1,7 +1,7 @@
 package cifrest
 
 import (
-  "cif"
+  "github.com/peter-mount/nrod-cif/cif"
   "bytes"
   "encoding/json"
 //  "encoding/xml"

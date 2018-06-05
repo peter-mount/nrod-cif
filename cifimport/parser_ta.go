@@ -1,7 +1,7 @@
 package cifimport
 
 import (
-  "cif"
+  "github.com/peter-mount/nrod-cif/cif"
 )
 
 func (c *CIFImporter) parseTA( l string ) error {

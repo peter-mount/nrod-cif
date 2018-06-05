@@ -1,8 +1,8 @@
 package main
 
 import (
-  "cifimport"
   "github.com/peter-mount/golib/kernel"
+  "github.com/peter-mount/nrod-cif/cifimport"
   "log"
 )
 

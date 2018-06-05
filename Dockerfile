@@ -21,16 +21,17 @@ RUN apk add --no-cache \
 RUN mkdir -p /dest/etc &&\
     cp -rp /etc/ssl /dest/etc/
 
-ADD scripts/ /scripts/
+# Our build scripts
+ADD scripts/ /usr/local/bin/
 
 # Ensure we have the libraries - docker will cache these between builds
-RUN /scripts/get.sh
+RUN get.sh
 
 # ============================================================
 # source container contains the source as it exists within the
 # repository.
 FROM build as source
-WORKDIR /go/src
+WORKDIR /go/src/github.com/peter-mount/nrod-cif
 ADD . .
 
 # ============================================================
@@ -47,7 +48,7 @@ RUN CGO_ENABLED=0 \
     GOOS=${goos} \
     GOARCH=${goarch} \
     GOARM=${goarm} \
-    /scripts/compile.sh /dest
+    compile.sh /dest
 
 # ============================================================
 # Finally build the final runtime container for the specific
