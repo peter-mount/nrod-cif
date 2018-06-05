@@ -1,11 +1,13 @@
 package cif
 
 import (
+  "encoding/xml"
   "time"
 )
 
 // A train schedule
 type Schedule struct {
+  XMLName                     xml.Name  `json:"-" xml:"schedule"`
   ID struct {
     // The train UID
     TrainUID                  string    `json:"uid" xml:"uid,attr"`

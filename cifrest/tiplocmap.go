@@ -45,18 +45,17 @@ func (r *Response) GetTiploc( n string ) ( *cif.Tiploc, bool ) {
   return t, e
 }
 
-/*
-// ResolveScheduleTiplocs resolves the Tiploc's in a Schedule
-func (c *CIF) ResolveScheduleTiplocs( tx *bolt.Tx, s *Schedule, r *Response ) {
+// GetScheduleTiplocs returns a slice of tiploc names in a Schedule that are
+// not present in this TiplocMap.
+func (r *Response) GetScheduleTiplocs( s *cif.Schedule ) []string {
+  var tpls []string
   for _, l := range s.Locations {
     if _, ok := r.GetTiploc( l.Tiploc ); !ok {
-      if t, exists := c.GetTiploc( tx, l.Tiploc ); exists {
-        r.AddTiploc( t )
-      }
+      tpls = append( tpls, l.Tiploc )
     }
   }
+  return tpls
 }
-*/
 
 func (t *TiplocMap) MarshalJSON() ( []byte, error ) {
   // Tiploc sorted by NLC

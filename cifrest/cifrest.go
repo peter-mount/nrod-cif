@@ -39,8 +39,8 @@ func (a *CIFRest) PostInit() error {
   a.restService.Handle( "/stanox/{id}", a.StanoxHandler ).Methods( "GET" )
   a.restService.Handle( "/tiploc/{id}", a.TiplocHandler ).Methods( "GET" )
 
-  //ctx.Handle( "/schedule/{uid}/{date}/{stp}", c.ScheduleHandler ).Methods( "GET" )
-  //ctx.Handle( "/schedule/{uid}", c.ScheduleUIDHandler ).Methods( "GET" )
+  a.restService.Handle( "/schedule/{uid}/{date}/{stp}", a.ScheduleHandler ).Methods( "GET" )
+  a.restService.Handle( "/schedule/{uid}", a.ScheduleUIDHandler ).Methods( "GET" )
 
   //ctx.Handle( "/timetable/{crs}/{date}/{hour}", c.TimetableHandler ).Methods( "GET" )
 
