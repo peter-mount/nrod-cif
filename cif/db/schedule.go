@@ -1,14 +1,15 @@
-package cif
+package db
 
 import (
   "database/sql"
   "encoding/json"
+  "github.com/peter-mount/nrod-cif/cif"
   "time"
 )
 
 // GetSchedule returns a specific Schedule's for a specific TrainUID, startDate and STPIndicator
 // If no schedule exists for the required key then nil is returned
-func (c *CIF) GetSchedule( uid string, date time.Time, stp string ) (*Schedule, error) {
+func (c *CIF) GetSchedule( uid string, date time.Time, stp string ) (*cif.Schedule, error) {
   row := c.db.QueryRow(
     "SELECT j.schedule FROM timetable.schedule_json j INNER JOIN timetable.schedule s ON j.id=s.id WHERE s.uid=$1 AND s.startdate=$2 AND s.stp=$3",
     uid, date, stp )
@@ -21,7 +22,7 @@ func (c *CIF) GetSchedule( uid string, date time.Time, stp string ) (*Schedule, 
     return nil, err
   }
 
-  s := &Schedule{}
+  s := &cif.Schedule{}
   err = json.Unmarshal( []byte(j), s )
   if err != nil {
     return nil, err
@@ -30,7 +31,7 @@ func (c *CIF) GetSchedule( uid string, date time.Time, stp string ) (*Schedule, 
   return s, nil
 }
 
-func (c *CIF) GetScheduleQuery( join string, where string, args ...interface{} ) ([]*Schedule, error) {
+func (c *CIF) GetScheduleQuery( join string, where string, args ...interface{} ) ([]*cif.Schedule, error) {
   rows, err := c.db.Query(
     "SELECT j.schedule FROM timetable.schedule_json j INNER JOIN timetable.schedule s ON j.id=s.id " + join + " WHERE " + where + " ORDER BY uid, startdate, stp",
     args... )
@@ -42,7 +43,7 @@ func (c *CIF) GetScheduleQuery( join string, where string, args ...interface{} )
   }
   defer rows.Close()
 
-  var res []*Schedule
+  var res []*cif.Schedule
   for rows.Next() {
     var j string
     err := rows.Scan( &j )
@@ -51,7 +52,7 @@ func (c *CIF) GetScheduleQuery( join string, where string, args ...interface{} )
     }
 
     if j != "" {
-      s := &Schedule{}
+      s := &cif.Schedule{}
       err = json.Unmarshal( []byte(j), s )
       if err != nil {
         return nil, err
@@ -64,7 +65,7 @@ func (c *CIF) GetScheduleQuery( join string, where string, args ...interface{} )
 }
 
 // GetSchedulesByUID returns a slice of all available schedules for a UID
-func (c *CIF) GetSchedulesByUID( uid string ) ([]*Schedule, error) {
+func (c *CIF) GetSchedulesByUID( uid string ) ([]*cif.Schedule, error) {
   s, err := c.GetScheduleQuery( "", "uid=$1", uid )
   return s, err
 }

@@ -1,15 +1,15 @@
 package cifrest
 
 import (
-  "github.com/peter-mount/nrod-cif/cif"
   "fmt"
+  cifdb "github.com/peter-mount/nrod-cif/cif/db"
   "github.com/peter-mount/golib/kernel"
   "github.com/peter-mount/golib/kernel/db"
   "github.com/peter-mount/golib/rest"
 )
 
 type CIFRest struct {
-  cif           cif.CIF
+  cif           cifdb.CIF
   dbService    *db.DBService
   restService  *rest.Server
 }

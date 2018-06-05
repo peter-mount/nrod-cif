@@ -1,15 +1,6 @@
 // A GO library providing a database based on the Network Rail CIF Timetable feed.
 package cif
 
-import (
-  "database/sql"
-)
-
-type CIF struct {
-  // The DB
-  db           *sql.DB
-}
-
 const (
   DateTime        = "2006-01-02 15:04:05"
   Date            = "2006-01-02"
