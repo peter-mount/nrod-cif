@@ -2,6 +2,7 @@ package cifrest
 
 import (
   "github.com/peter-mount/golib/rest"
+  "github.com/peter-mount/nrod-cif/cif"
   "fmt"
   "log"
   "strconv"
@@ -34,7 +35,7 @@ func (c *CIFRest) StanoxHandler( r *rest.Rest ) error {
     return nil
   }
 
-  resp := &Response{
+  resp := &cif.Response{
     Stanox: stanox,
     Self: r.Self( fmt.Sprintf( "/stanox/%d", stanox ) ),
   }

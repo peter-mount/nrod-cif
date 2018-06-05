@@ -1,7 +1,6 @@
-package cifrest
+package cif
 
 import (
-  "github.com/peter-mount/nrod-cif/cif"
   "encoding/xml"
 )
 
@@ -19,7 +18,7 @@ type Response struct {
   STPIndicator  string        `json:"stp,omitempty" xml:"stp,attr,omitempty"`
   //Message       string        `json:"message,omitempty" xml:"message,attr,omitempty"`
   // Schedules if any
-  Schedules  []*cif.Schedule  `json:"schedules,omitempty" xml:"schedules>schedule,omitempty"`
+  Schedules  []*Schedule  `json:"schedules,omitempty" xml:"schedules>schedule,omitempty"`
   // Map of tiplocs in result or in schedules
   Tiploc       *TiplocMap     `json:"tiploc,omitempty" xml:"tiplocs>tiploc,omitempty"`
   // uri that could replicate this result (updates dependent)

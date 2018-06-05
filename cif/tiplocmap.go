@@ -1,22 +1,20 @@
-package cifrest
+package cif
 
 import (
-  "github.com/peter-mount/nrod-cif/cif"
   "bytes"
   "encoding/json"
-//  "encoding/xml"
   "sort"
   "strings"
 )
 
 type TiplocMap struct {
-  m map[string]*cif.Tiploc
+  m map[string]*Tiploc
   s bool
 }
 
 func (r *Response) tiplocMap() *TiplocMap {
   if r.Tiploc == nil {
-    r.Tiploc = &TiplocMap{ m: make( map[string]*cif.Tiploc ) }
+    r.Tiploc = &TiplocMap{ m: make( map[string]*Tiploc ) }
   }
   return r.Tiploc
 }
@@ -26,7 +24,7 @@ func (r *Response) sortTiplocs() {
 }
 
 // AddTiploc adds a Tiploc to the response
-func (r *Response) AddTiploc( t *cif.Tiploc ) {
+func (r *Response) AddTiploc( t *Tiploc ) {
   tm := r.tiplocMap()
   if _, ok := tm.m[ t.Tiploc ]; !ok {
     tm.m[ t.Tiploc ] = t
@@ -34,20 +32,20 @@ func (r *Response) AddTiploc( t *cif.Tiploc ) {
 }
 
 // AddTiplocs adds an array of Tiploc's to the response
-func (r *Response) AddTiplocs( t []*cif.Tiploc ) {
+func (r *Response) AddTiplocs( t []*Tiploc ) {
   for _, e := range t {
     r.AddTiploc( e )
   }
 }
 
-func (r *Response) GetTiploc( n string ) ( *cif.Tiploc, bool ) {
+func (r *Response) GetTiploc( n string ) ( *Tiploc, bool ) {
   t, e := r.tiplocMap().m[ n ]
   return t, e
 }
 
 // GetScheduleTiplocs returns a slice of tiploc names in a Schedule that are
 // not present in this TiplocMap.
-func (r *Response) GetScheduleTiplocs( s *cif.Schedule ) []string {
+func (r *Response) GetScheduleTiplocs( s *Schedule ) []string {
   var tpls []string
   for _, l := range s.Locations {
     if _, ok := r.GetTiploc( l.Tiploc ); !ok {
@@ -59,7 +57,7 @@ func (r *Response) GetScheduleTiplocs( s *cif.Schedule ) []string {
 
 func (t *TiplocMap) MarshalJSON() ( []byte, error ) {
   // Tiploc sorted by NLC
-  var vals []*cif.Tiploc
+  var vals []*Tiploc
   for _, v := range t.m {
     vals = append( vals, v )
   }

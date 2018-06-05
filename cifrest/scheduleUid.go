@@ -2,6 +2,7 @@ package cifrest
 
 import (
   "github.com/peter-mount/golib/rest"
+  "github.com/peter-mount/nrod-cif/cif"
   "log"
 )
 
@@ -29,7 +30,7 @@ func (c *CIFRest) ScheduleUIDHandler( r *rest.Rest ) error {
     return nil
   }
 
-  resp := &Response{
+  resp := &cif.Response{
     TrainUID: uid,
     Schedules: schedules,
     Self: r.Self( "/schedule/" + uid ),

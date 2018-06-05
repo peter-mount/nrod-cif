@@ -1,8 +1,8 @@
 package cifrest
 
 import (
-  "github.com/peter-mount/nrod-cif/cif"
   "github.com/peter-mount/golib/rest"
+  "github.com/peter-mount/nrod-cif/cif"
   "log"
   "time"
 )
@@ -40,7 +40,7 @@ func (c *CIFRest) ScheduleHandler( r *rest.Rest ) error {
     return nil
   }
 
-  resp := &Response{
+  resp := &cif.Response{
     TrainUID: uid,
     Date: date,
     STPIndicator: stp,

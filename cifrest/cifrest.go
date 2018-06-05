@@ -1,3 +1,4 @@
+// cifrest A standalone rest server for service CIF timetables
 package cifrest
 
 import (

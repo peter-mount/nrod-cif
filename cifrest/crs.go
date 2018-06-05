@@ -2,6 +2,7 @@ package cifrest
 
 import (
   "github.com/peter-mount/golib/rest"
+  "github.com/peter-mount/nrod-cif/cif"
   "log"
 )
 
@@ -29,7 +30,7 @@ func (c *CIFRest) CRSHandler( r *rest.Rest ) error {
     return nil
   }
 
-  resp := &Response{
+  resp := &cif.Response{
     Crs: crs,
     Self: r.Self( "/crs/" + crs ),
   }
