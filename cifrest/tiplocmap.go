@@ -1,23 +1,22 @@
-package cif
+package cifrest
 
 import (
-  bolt "github.com/coreos/bbolt"
+  "cif"
   "bytes"
   "encoding/json"
 //  "encoding/xml"
-  "github.com/peter-mount/golib/rest"
   "sort"
   "strings"
 )
 
 type TiplocMap struct {
-  m map[string]*Tiploc
+  m map[string]*cif.Tiploc
   s bool
 }
 
 func (r *Response) tiplocMap() *TiplocMap {
   if r.Tiploc == nil {
-    r.Tiploc = &TiplocMap{ m: make( map[string]*Tiploc ) }
+    r.Tiploc = &TiplocMap{ m: make( map[string]*cif.Tiploc ) }
   }
   return r.Tiploc
 }
@@ -27,7 +26,7 @@ func (r *Response) sortTiplocs() {
 }
 
 // AddTiploc adds a Tiploc to the response
-func (r *Response) AddTiploc( t *Tiploc ) {
+func (r *Response) AddTiploc( t *cif.Tiploc ) {
   tm := r.tiplocMap()
   if _, ok := tm.m[ t.Tiploc ]; !ok {
     tm.m[ t.Tiploc ] = t
@@ -35,17 +34,18 @@ func (r *Response) AddTiploc( t *Tiploc ) {
 }
 
 // AddTiplocs adds an array of Tiploc's to the response
-func (r *Response) AddTiplocs( t []*Tiploc ) {
+func (r *Response) AddTiplocs( t []*cif.Tiploc ) {
   for _, e := range t {
     r.AddTiploc( e )
   }
 }
 
-func (r *Response) GetTiploc( n string ) ( *Tiploc, bool ) {
+func (r *Response) GetTiploc( n string ) ( *cif.Tiploc, bool ) {
   t, e := r.tiplocMap().m[ n ]
   return t, e
 }
 
+/*
 // ResolveScheduleTiplocs resolves the Tiploc's in a Schedule
 func (c *CIF) ResolveScheduleTiplocs( tx *bolt.Tx, s *Schedule, r *Response ) {
   for _, l := range s.Locations {
@@ -56,18 +56,11 @@ func (c *CIF) ResolveScheduleTiplocs( tx *bolt.Tx, s *Schedule, r *Response ) {
     }
   }
 }
-
-// SetSelf sets the Self field to match this request
-func (r *Response) TiplocsSetSelf( rs *rest.Rest ) {
-  t := r.tiplocMap()
-  for _, v := range t.m {
-    v.SetSelf( rs )
-  }
-}
+*/
 
 func (t *TiplocMap) MarshalJSON() ( []byte, error ) {
   // Tiploc sorted by NLC
-  var vals []*Tiploc
+  var vals []*cif.Tiploc
   for _, v := range t.m {
     vals = append( vals, v )
   }

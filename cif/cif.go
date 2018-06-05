@@ -17,3 +17,9 @@ const (
   HumanDate       = "2006 Jan 02"
   Time            = "15:04:05"
 )
+
+// Scanable is an interface with a function called Scan.
+// e.g. Row or Rows in database/sql
+type Scannable interface {
+  Scan(... interface{}) error
+}

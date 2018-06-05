@@ -1,6 +1,7 @@
 package cif
 
 import (
+  "database/sql"
   "time"
 )
 
@@ -10,18 +11,21 @@ type Tiploc struct {
   //XMLName         xml.Name  `xml:"tiploc"`
   // Tiploc key for this location
   Tiploc          string    `json:"tiploc" xml:"tiploc,attr"`
-  NLC             int       `json:"nlc" xml:"nlc,attr"`
-  NLCCheck        string    `json:"nlcCheck" xml:"nlcCheck,attr"`
   // Proper description for this location
   Desc            string    `json:"desc,omitempty" xml:"desc,attr,omitempty"`
-  // Stannox code, 0 means none
-  Stanox          int       `json:"stanox,omitempty" xml:"stanox,attr,omitempty"`
   // CRS code, "" for none. Codes starting with X or Z are usually not stations.
   CRS             string    `json:"crs,omitempty" xml:"crs,attr,omitempty"`
+  // Stannox code, 0 means none
+  Stanox          int       `json:"stanox,omitempty" xml:"stanox,attr,omitempty"`
+  // NLC
+  NLC             int       `json:"nlc" xml:"nlc,attr"`
+  NLCCheck        string    `json:"nlcCheck" xml:"nlcCheck,attr"`
   // NLC description of the location
   NLCDesc         string    `json:"nlcDesc,omitempty" xml:"nlcDesc,attr,omitempty"`
   // True if this tiploc is a station
-  Station         bool      `json:"station"`
+  Station         bool      `json:"station,omitempty" xml:"station,attr,omitempty"`
+  // The unique ID of this tiploc
+  ID              int64     `json:"id" xml:"id,attr"`
   // The CIF extract this entry is from
   DateOfExtract   time.Time `json:"date" xml:"date,attr"`
   // Self (generated on rest only)
@@ -31,4 +35,95 @@ type Tiploc struct {
 func (t *Tiploc) Update() {
   // Tiploc is a station IF it has a stanox, crs & crs not start with X or Z
   t.Station = t.Stanox > 0 &&t.CRS != "" && !(t.CRS[0] == 'X' || t.CRS[0] == 'Z')
+}
+
+func (t *Tiploc) Scan( row Scannable ) (bool,error) {
+  var del bool
+
+  err := row.Scan(
+    &t.ID,
+    &t.Tiploc,
+    &t.CRS,
+    &t.Stanox,
+    &t.Desc,
+    &t.NLC,
+    &t.NLCCheck,
+    &t.NLCDesc,
+    &t.Station,
+    &del,
+    &t.DateOfExtract,
+  )
+
+  if err != nil {
+    return false, err
+  }
+
+  if del {
+    return true, nil
+  }
+
+  // Temporary fix until db uses nulls - bug in parser
+  if t.CRS == "   " {
+    t.CRS=""
+  }
+
+  return false, err
+}
+
+func (c *CIF) GetTiploc( tpl string ) (*Tiploc, error) {
+  row := c.db.QueryRow( "SELECT * FROM timetable.tiploc WHERE tiploc=$1", tpl )
+  r := &Tiploc{}
+  del, err := r.Scan( row )
+  if del || err == sql.ErrNoRows {
+    return nil, nil
+  }
+  if err != nil {
+    return nil, err
+  }
+
+  return r, nil
+}
+
+func (c *CIF) GetTiplocs( join string, where string, args ...interface{} ) ([]*Tiploc, error) {
+  rows, err := c.db.Query( "SELECT t.* FROM timetable.tiploc t " + join + " WHERE " + where, args... )
+  if err == sql.ErrNoRows {
+    return nil, nil
+  }
+  if err != nil {
+    return nil, err
+  }
+  defer rows.Close()
+
+  var tiploc *Tiploc
+  var res []*Tiploc
+  for rows.Next() {
+    if tiploc == nil {
+      tiploc = &Tiploc{}
+    }
+
+    del, err := tiploc.Scan( rows )
+    if err != nil {
+      return nil, err
+    }
+
+    if !del {
+      res = append( res, tiploc )
+      tiploc = nil
+    }
+  }
+
+  return res, nil
+}
+
+func (c *CIF) GetStanox( stanox int ) ([]*Tiploc, error) {
+  rows, err := c.GetTiplocs( "", "stanox=$1", stanox )
+  return rows, err
+}
+
+func (c *CIF) GetCRS( crs string ) ([]*Tiploc, error) {
+  rows, err := c.GetTiplocs(
+    "INNER JOIN timetable.tiploc c ON t.stanox=c.stanox",
+    "c.crs=$1 AND c.stanox IS NOT NULL AND c.stanox > 0",
+    crs )
+  return rows, err
 }

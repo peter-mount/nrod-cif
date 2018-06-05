@@ -5,7 +5,8 @@
 DEST=$1
 
 for bin in \
-  cifimport
+  cifimport \
+  cifrest
 do
   echo "Building ${bin}"
   go build -o ${DEST}/${bin} ${bin}/bin

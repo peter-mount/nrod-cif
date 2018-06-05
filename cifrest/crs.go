@@ -1,9 +1,8 @@
-package cif
+package cifrest
 
 import (
-  bolt "github.com/coreos/bbolt"
   "github.com/peter-mount/golib/rest"
-  "github.com/peter-mount/golib/statistics"
+  "log"
 )
 
 // TiplocHandler implements a net/http handler that implements a simple Rest service to retrieve Tiploc records.
@@ -14,18 +13,27 @@ import (
 // router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct. When running this would allow GET requests like /tiploc/MSTONEE to return JSON representing that station.
-func (c *CIF) TiplocHandler( r *rest.Rest ) error {
-  return c.db.View( func( tx *bolt.Tx ) error {
-    tpl := r.Var( "id" )
+func (c *CIFRest) CRSHandler( r *rest.Rest ) error {
+  crs := r.Var( "id" )
 
-    if tiploc, exists := c.GetTiploc( tx, tpl ); exists {
-      statistics.Incr( "tiploc.200" )
-      r.Status( 200 ).Value( tiploc )
-    } else {
-      statistics.Incr( "tiploc.404" )
-      r.Status( 404 )
-    }
+  tiplocs, err := c.cif.GetCRS( crs )
 
+  if err != nil {
+    r.Status( 500 )
+    log.Printf( "500: crs %s = %s", crs, err )
+    return err
+  }
+
+  if tiplocs == nil || len( tiplocs ) == 0 {
+    r.Status( 404 )
     return nil
-  } )
+  }
+
+  resp := &Response{
+    Crs: crs,
+    Self: r.Self( "/crs/" + crs ),
+  }
+  resp.AddTiplocs( tiplocs )
+  r.Status( 200 ).Value( resp )
+  return nil
 }
