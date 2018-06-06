@@ -59,7 +59,10 @@ def goarm = {
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')),
   disableConcurrentBuilds(),
-  disableResume()
+  disableResume(),
+  pipelineTriggers([
+    cron('H H * * *')
+  ])
 ])
 
 // Build a service for a specific architecture
