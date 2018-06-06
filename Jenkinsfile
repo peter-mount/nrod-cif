@@ -1,5 +1,7 @@
 // Repository name use, must end with / or be '' for none
-repository= 'area51/'
+//repository= 'area51/'
+// Disable deployment until it's known to work
+repository=''
 
 // image prefix
 imagePrefix = 'nre-cif'
@@ -79,7 +81,7 @@ def buildArch = {
 
     if( repository != '' ) {
       // Push all built images relevant docker repository
-      //sh 'docker push ' + dockerImage( architecture )
+      sh 'docker push ' + dockerImage( architecture )
     } // repository != ''
 }
 
@@ -102,7 +104,7 @@ def multiArchService = {
     }
 
     // Publish the manifest
-    //sh 'docker manifest push -p ' + multiImage
+    sh 'docker manifest push -p ' + multiImage
 }
 
 // Now build everything on one node
@@ -146,9 +148,9 @@ node('AMD64') {
 
   // Stages valid only if we have a repository set
   if( repository != '' ) {
-    //stage( "Multiarch Image" ) {
-    //  multiArchService( '' )
-    //}
+    stage( "Multiarch Image" ) {
+      multiArchService( '' )
+    }
   }
 
 }
