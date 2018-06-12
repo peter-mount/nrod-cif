@@ -54,7 +54,7 @@ func (a *CIFRetriever) writeoutput() error {
     return err
   }
 
-  wfile, err := os.OpenFile( *a.output, os.O_CREATE | os.O_WRONLY, 0644 )
+  wfile, err := os.OpenFile( *a.output, os.O_CREATE | os.O_WRONLY | os.O_TRUNC, 0644 )
   if err != nil {
     return err
   }
