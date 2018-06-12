@@ -65,7 +65,7 @@ func (c *CIFImporter) parseFile( scanner *bufio.Scanner ) (bool, error) {
     }
 
     if !doImport {
-      skip = doImport
+      skip = true
       return errors.New( "CIF too old" )
     }
 
