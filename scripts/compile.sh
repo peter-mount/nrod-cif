@@ -6,7 +6,8 @@ DEST=$1
 
 for bin in \
   cifimport \
-  cifrest
+  cifrest \
+  cifretrieve
 do
   echo "Building ${bin}"
   go build -o ${DEST}/${bin} github.com/peter-mount/nrod-cif/${bin}/bin

@@ -6,6 +6,12 @@ ARG arch=amd64
 ARG goos=linux
 
 # ============================================================
+FROM alpine as base
+RUN apk add --no-cache \
+      curl \
+      tzdata
+
+# ============================================================
 # Build container containing our pre-pulled libraries.
 # As this changes rarely it means we can use the cache between
 # building each microservice.
@@ -50,11 +56,13 @@ RUN CGO_ENABLED=0 \
     GOARM=${goarm} \
     compile.sh /dest
 
+RUN ls -l /dest
+
 # ============================================================
 # Finally build the final runtime container for the specific
 # microservice
 #FROM scratch
-FROM alpine
+FROM base
 
 # The default database directory
 Volume /database
