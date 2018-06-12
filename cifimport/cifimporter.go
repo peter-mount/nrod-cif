@@ -2,12 +2,15 @@
 package cifimport
 
 import (
+  "bufio"
+  "compress/gzip"
   "github.com/peter-mount/nrod-cif/cif"
   "database/sql"
   "flag"
   "fmt"
   "github.com/peter-mount/golib/kernel"
   "github.com/peter-mount/golib/kernel/db"
+  "io"
   "log"
   "os"
 )
@@ -30,6 +33,8 @@ type CIFImporter struct {
   maintenance  *bool
   forceExpire  *bool
   forceVacuum  *bool
+  // File containing cif file names to read rather than on command line
+  fileSource   *string
 }
 
 func (a *CIFImporter) Name() string {
@@ -40,6 +45,7 @@ func (a *CIFImporter) Init( k *kernel.Kernel ) error {
   a.maintenance = flag.Bool( "m", false, "Same as -expire -vacuum" )
   a.forceExpire = flag.Bool( "expire", false, "Remove expired entries" )
   a.forceVacuum = flag.Bool( "vacuum", false, "Vacuum & recluster the database" )
+  a.fileSource = flag.String( "files", "", "File containing cif files to import" )
 
   dbservice, err := k.AddService( &db.DBService{} )
   if err != nil {
@@ -54,6 +60,23 @@ func (a *CIFImporter) PostInit() error {
 
   // Fail if we have no CIF files in the command line
   a.files = flag.Args()
+
+  if *a.fileSource != "" {
+    file, err := os.Open( *a.fileSource )
+    if err != nil {
+      return err
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner( file );
+    for scanner.Scan() {
+      a.files = append( a.files, scanner.Text() )
+    }
+    err = scanner.Err()
+    if err != nil {
+      return err
+    }
+  }
 
   if *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) {
     if len( a.files ) > 0 {
@@ -96,7 +119,29 @@ func (a *CIFImporter) Run() error {
       }
       defer f.Close()
 
-      skip, err := a.importCIF( f )
+      // gzip or plain
+      var header [2]byte
+      c, err := io.ReadFull( f, header[:] )
+      if err != nil {
+        return err
+      }
+      if c < 2 {
+        return fmt.Errorf( "")
+      }
+      _, err = f.Seek( 0, io.SeekStart )
+      if err != nil {
+        return err
+      }
+      reader := io.Reader( f )
+      if header[0] == 0x1f && header[1] == 0x8b {
+        reader, err = gzip.NewReader( f )
+        if err != nil {
+          return err
+        }
+      }
+
+
+      skip, err := a.importCIF( reader )
       if err != nil {
         if skip {
           // Non fatal error so log it but don't kill the import
