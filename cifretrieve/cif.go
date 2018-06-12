@@ -64,12 +64,12 @@ func (a *CIFRetriever) extractCifHeader( f *os.File ) (*cif, error) {
   log.Printf( "CIF %s %v schedules between 20%s-%s-%s and 20%s-%s-%s",
     fileType,
     c.date,
-    s[48:50],
-    s[50:52],
     s[52:54],
-    s[54:56],
+    s[50:52],
+    s[48:50],
+    s[58:60],
     s[56:58],
-    s[58:60] )
+    s[54:56] )
 
   return c, nil
 }

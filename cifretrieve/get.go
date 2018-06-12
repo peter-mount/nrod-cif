@@ -16,7 +16,7 @@ const (
 )
 
 func (a *CIFRetriever) retrieveFull() error {
-  return a.retrieve( "CIF_ALL_FULL_DAILY", "toc-full", "full" )
+  return a.retrieve( "CIF_ALL_FULL_DAILY", "toc-full.CIF.gz", "full" )
 }
 
 func (a *CIFRetriever) retrieveUpdate( dow int ) error {
