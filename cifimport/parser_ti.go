@@ -31,7 +31,17 @@ func (c *CIFImporter) putTiploc( t *cif.Tiploc ) error {
   _, err := c.tx.Exec(
     "INSERT INTO timetable.tiploc " +
     "(tiploc, crs, stanox, name, nlc, nlccheck, nlcdesc, station, dateextract) " +
-    "VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    "VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9) " +
+    "ON CONFLICT ( id ) " +
+    "DO UPDATE SET " +
+    "crs = EXCLUDED.crs, " +
+    "stanox = EXCLUDED.stanox, " +
+    "name = EXCLUDED.name, " +
+    "nlc = EXCLUDED.nlc, " +
+    "nlccheck = EXCLUDED.nlccheck, " +
+    "nlcdesc = EXCLUDED.nlcdesc, " +
+    "station = EXCLUDED.station, " +
+    "dateextract = EXCLUDED.dateextract ",
     t.Tiploc,
     t.CRS,
     t.Stanox,
