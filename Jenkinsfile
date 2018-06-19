@@ -4,7 +4,7 @@ repository= 'area51/'
 //repository=''
 
 // image prefix
-imagePrefix = 'nre-cif'
+imagePrefix = 'nrod-cif'
 
 // The image version, master branch is latest in docker
 version=BRANCH_NAME
