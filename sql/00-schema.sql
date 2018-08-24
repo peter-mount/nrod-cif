@@ -3,14 +3,9 @@
 --
 -- ======================================================================
 
-CREATE SCHEMA IF NOT EXISTS timetable;
+DROP SCHEMA IF EXISTS timetable CASCADE;
 
-DROP TABLE timetable.station CASCADE;
-DROP TABLE timetable.schedule_json;
-DROP TABLE timetable.schedule;
-DROP TABLE timetable.assoc;
-DROP TABLE timetable.tiploc;
-DROP TABLE timetable.cif;
+CREATE SCHEMA IF NOT EXISTS timetable;
 
 -- ======================================================================
 
