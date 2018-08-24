@@ -17,6 +17,10 @@ RUN apk add --no-cache \
       git \
       tzdata
 
+# go-bindata
+RUN go get -v github.com/kevinburke/go-bindata &&\
+    go build -o /usr/local/bin/go-bindata github.com/kevinburke/go-bindata/go-bindata
+
 # Our build scripts
 ADD scripts/ /usr/local/bin/
 
@@ -29,6 +33,9 @@ RUN get.sh
 FROM build as source
 WORKDIR /go/src/github.com/peter-mount/nrod-cif
 ADD . .
+
+# Import sql so we can build as needed
+RUN go-bindata -o cifimport/sqlassets.go -pkg cifimport sql/
 
 # ============================================================
 # Compile the source.

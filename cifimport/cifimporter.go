@@ -10,6 +10,7 @@ import (
   "fmt"
   "github.com/peter-mount/golib/kernel"
   "github.com/peter-mount/golib/kernel/db"
+  "github.com/peter-mount/golib/sqlutils"
   "io"
   "log"
   "os"
@@ -20,6 +21,7 @@ type CIFImporter struct {
   // The DB
   dbService    *db.DBService
   db           *sql.DB
+  sql          *sqlutils.SchemaImport
   // Last import HD record
   header       *HD
   // Current import HD record
@@ -51,8 +53,14 @@ func (a *CIFImporter) Init( k *kernel.Kernel ) error {
   if err != nil {
     return err
   }
-
   a.dbService = (dbservice).(*db.DBService)
+
+  sqlservice, err := k.AddService( sqlutils.NewSchemaImport( "timetable", AssetString, AssetNames ) )
+  if err != nil {
+    return err
+  }
+  a.sql = (sqlservice).(*sqlutils.SchemaImport)
+
   return nil
 }
 
