@@ -20,14 +20,17 @@ RETURNS JSON AS $$
 		  s.id AS sid,
 		  s.uid, s.startDate, s.stp,
 		  st.time AS "time",
+      st.ord AS ord,
 		  ot.tiploc AS origin,
 			ot.tod AS "originTime",
 		  dt.tiploc AS destination,
-			dt.tod AS "destinationTime"
+			dt.tod AS "destinationTime",
+      sj.schedule AS "schedule"
 		FROM timetable.schedule s
 		  INNER JOIN schedules st ON st.sid = s.id
 		  INNER JOIN timetable.origin( s.id ) ot ON s.id=ot.sid
 		  INNER JOIN timetable.destination( s.id ) dt ON s.id = dt.sid
+      INNER JOIN timetable.schedule_json sj ON s.id=sj.id
 		ORDER BY st.time >= '01:00', st.time, s.id
   ), tpls AS (
     SELECT DISTINCT
