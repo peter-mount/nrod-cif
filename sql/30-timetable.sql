@@ -44,7 +44,7 @@ RETURNS JSON AS $$
     -- Schedules within the timetable
     'schedules', (SELECT json_agg(row_to_json(s)) FROM services s ),
     -- tiploc entries for tiplocs within the timetable
-    'tiploc', (SELECT json_agg(row_to_json(t)) FROM tpls t ),
+    'tiploc', (SELECT json_object_agg(t.tiploc,row_to_json(t)) FROM tpls t ),
     -- timestamp of when this timetable was generated
     'generated', (NOW() AT TIME ZONE 'Europe/London'::TEXT)
 	)::JSON;
