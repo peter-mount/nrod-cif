@@ -35,17 +35,51 @@ RETURNS JSON AS $$
       FROM timetable.tiploc t
         INNER JOIN services s ON s.origin = t.tiploc OR s.destination = t.tiploc
       ORDER BY t.tiploc
+  ), date1 AS (
+    SELECT
+        -- The requested hour
+        date_trunc('hour',pst)::TIMESTAMP WITHOUT TIME ZONE AS ts,
+        -- The next hour
+        (date_trunc('hour',pst) + '1 hour'::INTERVAL)::TIMESTAMP WITHOUT TIME ZONE AS next,
+        -- The previous hour
+        (date_trunc('hour',pst) - '1 hour'::INTERVAL)::TIMESTAMP WITHOUT TIME ZONE AS previous,
+        -- The timetable start date, earliest to allow is today
+        CASE
+          WHEN c.userstartdate > date_trunc('day',NOW()) THEN c.userstartdate
+          ELSE date_trunc('day',NOW())
+        END as userstartdate,
+        -- The end date
+        c.userenddate
+      FROM timetable.cif c
+      ORDER BY c.id DESC
+      LIMIT 1
+  ), dates AS (
+    -- This takes date1 and sets next or prev to null if they are outside the
+    -- available data range
+    SELECT
+        d.ts,
+        CASE
+          WHEN d.next <= d.userenddate THEN d.next
+          ELSE NULL
+        END AS next,
+        CASE
+          WHEN d.previous > d.userstartdate THEN d.previous
+          ELSE NULL
+        END AS previous,
+        d.userstartdate::DATE,
+        d.userenddate::DATE,
+        -- timestamp of when this timetable was generated
+        NOW() AT TIME ZONE 'Europe/London' AS generated
+      FROM date1 d
   )
   SELECT json_build_object(
     -- tiploc entry for this station
     'station', (SELECT row_to_json(t) FROM timetable.tiploc t WHERE t.crs = pcrs LIMIT 1 ),
-    -- timestamp for the start of the hour for this timetable
-    'ts', (date_trunc('hour',pst) AT TIME ZONE 'Europe/London'::TEXT),
     -- Schedules within the timetable
     'schedules', (SELECT json_agg(row_to_json(s)) FROM services s ),
     -- tiploc entries for tiplocs within the timetable
     'tiploc', (SELECT json_object_agg(t.tiploc,row_to_json(t)) FROM tpls t ),
-    -- timestamp of when this timetable was generated
-    'generated', (NOW() AT TIME ZONE 'Europe/London'::TEXT)
+    -- The next & previous hour, not always +1 due to DST changes ;-)
+    'meta', (SELECT row_to_json(d) FROM dates d LIMIT 1)
 	)::JSON;
 $$ LANGUAGE SQL;
