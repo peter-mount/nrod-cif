@@ -12,7 +12,7 @@ RETURNS TABLE(
   tod     TIME
 ) AS $$
   SELECT
-      s.id,
+      s.sid,
       t.tiploc,
       s.time
     FROM timetable.tiploc t
@@ -28,7 +28,7 @@ RETURNS TABLE(
   tod     TIME
 ) AS $$
   SELECT
-      s.id,
+      s.sid,
       t.tiploc,
       s.time
     FROM timetable.tiploc t
