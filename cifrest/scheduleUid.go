@@ -6,14 +6,14 @@ import (
   "log"
 )
 
-// TiplocHandler implements a net/http handler that implements a simple Rest service to retrieve Tiploc records.
-// The handler must have {id} set in the path for this to work, where id would represent the Tiploc code.
+// ScheduleUIDHandler implements a REST endpoint which returns all timetable
+// schedules for a specific schedule uid.
 //
-// For example:
+// Handler setup:
 //
-// router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
+// router.HandleFunc( "/schedule/{uid}", a.ScheduleUIDHandler ).Methods( "GET" )
 //
-// where db is a pointer to an active CIF struct. When running this would allow GET requests like /tiploc/MSTONEE to return JSON representing that station.
+// where a is a pointer to an active CIF struct.
 func (c *CIFRest) ScheduleUIDHandler( r *rest.Rest ) error {
   uid := r.Var( "uid" )
 
