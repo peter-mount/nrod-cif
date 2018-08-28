@@ -59,8 +59,8 @@ BEGIN
             sdt, edt, vdow,
             (step->'time'->>'time')::TIME
           );
-        vord := vord + 1;
       END IF;
+      vord := vord + 1;
     END LOOP;
   END IF;
 
