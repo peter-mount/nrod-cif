@@ -15,9 +15,18 @@ CREATE OR REPLACE FUNCTION timetable.timetable(
 RETURNS JSON AS $$
 	WITH schedules AS (
 	  SELECT * FROM timetable.schedules( pcrs, date_trunc('hour',pst), null )
-	), services AS (
+  ), services AS (
 	  SELECT
 		  s.id AS sid,
+		  s.uid, s.startDate, s.stp,
+		  st.time AS "time"
+		FROM timetable.schedule s
+		  INNER JOIN schedules st ON st.sid = s.id
+		  INNER JOIN timetable.origin( s.id ) ot ON s.id=ot.sid
+		  INNER JOIN timetable.destination( s.id ) dt ON s.id = dt.sid
+	), servicesout AS (
+	  SELECT
+		  id.encode(s.id, 'radix.62') AS sid,
 		  s.uid, s.startDate, s.stp,
 		  st.time AS "time",
       st.ord AS ord,
@@ -31,12 +40,13 @@ RETURNS JSON AS $$
 		  INNER JOIN timetable.origin( s.id ) ot ON s.id=ot.sid
 		  INNER JOIN timetable.destination( s.id ) dt ON s.id = dt.sid
       INNER JOIN timetable.schedule_json sj ON s.id=sj.id
+    WHERE s.id IN (SELECT s1.sid from services s1 )
 		ORDER BY st.time >= '01:00', st.time, s.id
   ), tpls AS (
     SELECT DISTINCT
         t.*
       FROM timetable.tiploc t
-        INNER JOIN services s ON s.origin = t.tiploc OR s.destination = t.tiploc
+        INNER JOIN servicesout s ON s.origin = t.tiploc OR s.destination = t.tiploc
       ORDER BY t.tiploc
   ), date1 AS (
     SELECT
@@ -79,7 +89,7 @@ RETURNS JSON AS $$
     -- tiploc entry for this station
     'station', (SELECT row_to_json(t) FROM timetable.tiploc t WHERE t.crs = pcrs LIMIT 1 ),
     -- Schedules within the timetable
-    'schedules', (SELECT json_agg(row_to_json(s)) FROM services s ),
+    'schedules', (SELECT json_agg(row_to_json(s)) FROM servicesout s ),
     -- tiploc entries for tiplocs within the timetable
     'tiploc', (SELECT json_object_agg(t.tiploc,row_to_json(t)) FROM tpls t ),
     -- The next & previous hour, not always +1 due to DST changes ;-)

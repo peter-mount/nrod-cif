@@ -396,3 +396,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ================================================================================
+CREATE OR REPLACE FUNCTION id.encode( pdt DATE )
+RETURNS TEXT AS $$
+  SELECT id.encode( (FLOOR(EXTRACT(EPOCH FROM pdt) * 1000) - id.meta_bigint('epoch'))::BIGINT, 'radix.62' );
+$$ LANGUAGE SQL;
+
+-- ================================================================================
+CREATE OR REPLACE FUNCTION id.encode( pdt TIME )
+RETURNS TEXT AS $$
+  SELECT id.encode( (FLOOR(EXTRACT(EPOCH FROM pdt) * 1000) - id.meta_bigint('epoch'))::BIGINT, 'radix.62' );
+$$ LANGUAGE SQL;
+
+-- ================================================================================
+CREATE OR REPLACE FUNCTION id.encode( pdt TIMESTAMP WITHOUT TIME ZONE )
+RETURNS TEXT AS $$
+  SELECT id.encode( (FLOOR(EXTRACT(EPOCH FROM pdt) * 1000) - id.meta_bigint('epoch'))::BIGINT, 'radix.62' );
+$$ LANGUAGE SQL;
+
+-- ================================================================================
+CREATE OR REPLACE FUNCTION id.encode( pdt TIMESTAMP WITH TIME ZONE )
+RETURNS TEXT AS $$
+  SELECT id.encode( (FLOOR(EXTRACT(EPOCH FROM pdt) * 1000) - id.meta_bigint('epoch'))::BIGINT, 'radix.62' );
+$$ LANGUAGE SQL;
