@@ -1,9 +1,6 @@
 -- ======================================================================
--- triggers to maintain the timetable
+-- Trigger on schedule delete remove all entries from the other tables
 -- ======================================================================
-
--- ======================================================================
--- On schedule delete remove all entries
 CREATE OR REPLACE FUNCTION timetable.scheddeleted()
 RETURNS TRIGGER AS $$
 BEGIN

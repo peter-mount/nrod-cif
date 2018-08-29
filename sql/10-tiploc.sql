@@ -8,6 +8,7 @@
 -- This algorithm encodes the characters 0-9, A-Z, a-z into a 6 bit number
 -- and generates an integer constant based on the tiploc
 --
+-- ======================================================================
 CREATE OR REPLACE FUNCTION timetable.gettiplocid( t varchar(7) )
 RETURNS BIGINT AS $$
 DECLARE

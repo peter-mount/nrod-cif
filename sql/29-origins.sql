@@ -4,6 +4,7 @@
 -- timetable.origin( sid ) returns the origin tiploc and time
 -- timetable.destination( sid ) returns the destination tiploc and time
 --
+-- The returned row consists of the scheduleId, tiploc and time of day
 -- ======================================================================
 CREATE OR REPLACE FUNCTION timetable.origin( psid BIGINT )
 RETURNS TABLE(

@@ -8,8 +8,8 @@ DROP SCHEMA IF EXISTS timetable CASCADE;
 CREATE SCHEMA IF NOT EXISTS timetable;
 
 -- ======================================================================
-
 -- record of db imports
+-- ======================================================================
 CREATE TABLE timetable.cif (
   id                      SERIAL NOT NULL,
   FileMainframeIdentity   CHAR(20),
@@ -27,13 +27,24 @@ CREATE INDEX cif_c ON timetable.cif(FileMainframeIdentity);
 CREATE INDEX cif_d ON timetable.cif(DateOfExtract);
 CREATE INDEX cif_cd ON timetable.cif(FileMainframeIdentity,DateOfExtract);
 
+-- ======================================================================
 -- Tiploc location
+--
+-- The primary key is on id which is generated from the tiploc field by
+-- the gettiplocid function
+-- ======================================================================
 CREATE TABLE timetable.tiploc (
+  -- Generated id based on tiploc by the gettiplocid function
   id          BIGINT NOT NULL,
+  -- The TIPLOC id
   tiploc      VARCHAR(7) NOT NULL,
+  -- The CRS/3Alpha code or null
   crs         CHAR(3),
+  -- The location's stanox id
   stanox      INTEGER,
+  -- The full name of this tiploc
   name        VARCHAR(26),
+  --- The NLC data for this location
   nlc         INTEGER,
   nlccheck    CHAR,
   nlcdesc     VARCHAR(16),
@@ -61,12 +72,15 @@ CREATE INDEX tiploc_name
   ON timetable.tiploc(name)
   WHERE name IS NOT NULL;
 
--- Used for clustering
+-- Used for clustering related tiploc's together
 CREATE UNIQUE INDEX tiploc_cluster
   ON timetable.tiploc(stanox, tiploc);
 
+-- ======================================================================
 -- schedule contains the searchable details of a schedule
+-- ======================================================================
 CREATE TABLE timetable.schedule (
+  -- generated id based on the primary key and the scheduleid function
   id          BIGINT NOT NULL,
   -- Primary key for all schedules
   uid         CHAR(6) NOT NULL,
@@ -87,19 +101,34 @@ CREATE INDEX schedule_ed ON timetable.schedule( enddate );
 CREATE INDEX schedule_sed ON timetable.schedule( startdate, enddate );
 CREATE INDEX schedule_used ON timetable.schedule( uid, stp, startdate, enddate );
 
+-- ======================================================================
 -- the schedule json
+-- ======================================================================
 CREATE TABLE timetable.schedule_json (
+  -- generated id, linked to the schedule table
   id          BIGINT NOT NULL REFERENCES timetable.schedule(id),
+  -- The full json of this schedule
   schedule    JSON NOT NULL,
   PRIMARY KEY( id )
 );
 
+-- ======================================================================
 -- Link between schedules and each individual station
-
+--
+-- When a schedule is added it's scanned and all stops are included in
+-- this table.
+--
+-- When a search is performed for a station, this table is used and we
+-- can then filter down the required schedules easily & quickly.
+-- ======================================================================
 CREATE TABLE timetable.station (
+  -- generated schedule id, linked to the schedule table
   sid         BIGINT NOT NULL REFERENCES timetable.schedule(id),
+  -- The position of this entry within the schedule
   ord         SMALLINT NOT NULL,
+  -- The tiploc of this entry
   tid         BIGINT NOT NULL,
+  -- The schedule stp
   stp         CHAR NOT NULL,
   -- used in searches, the date range for this entry
   startdate   DATE NOT NULL,
@@ -118,7 +147,9 @@ CREATE INDEX station_tdt ON timetable.station(tid,startdate,enddate,time);
 CREATE INDEX station_tt ON timetable.station(tid,time);
 --CREATE INDEX station_io ON timetable.station(scheduleId,ord);
 
+-- ======================================================================
 -- Schedule associations
+-- ======================================================================
 CREATE TABLE timetable.assoc (
   id          SERIAL NOT NULL,
   mainuid     CHAR(6) NOT NULL,

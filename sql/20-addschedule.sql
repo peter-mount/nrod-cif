@@ -1,9 +1,6 @@
 -- ======================================================================
--- triggers to maintain the timetable
+-- Insert/update a schedule based on it's JSON
 -- ======================================================================
-
--- ======================================================================
--- Insert/update a schedule
 CREATE OR REPLACE FUNCTION timetable.addschedule( pSched JSON )
 RETURNS BIGINT AS $$
 DECLARE

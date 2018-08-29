@@ -1,5 +1,8 @@
 -- ======================================================================
 -- Generates the unique scheduleId
+--
+-- This is formed of the number of days since the dateEpoch, the UID and the STP
+-- formed into a single unique BIGINT
 -- ======================================================================
 CREATE OR REPLACE FUNCTION timetable.scheduleid( puid TEXT, psd DATE, pstp CHAR )
 RETURNS BIGINT AS $$
