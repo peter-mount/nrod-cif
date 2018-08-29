@@ -14,17 +14,23 @@ CREATE OR REPLACE FUNCTION timetable.timetable(
 )
 RETURNS JSON AS $$
 	WITH schedules AS (
+    -- The schedules that exist for the station on the require hour
 	  SELECT * FROM timetable.schedules( pcrs, date_trunc('hour',pst), null )
   ), services AS (
-	  SELECT
+    -- view of services reduced down to the ones active on a specific day
+    -- distinct on uid as only 1 entry per schedule
+    -- we'll presume that circular routes don't visit a station more than once per hour
+	  SELECT DISTINCT ON (s.uid)
 		  s.id AS sid,
 		  s.uid, s.startDate, s.stp,
 		  st.time AS "time"
 		FROM timetable.schedule s
 		  INNER JOIN schedules st ON st.sid = s.id
-		  INNER JOIN timetable.origin( s.id ) ot ON s.id=ot.sid
-		  INNER JOIN timetable.destination( s.id ) dt ON s.id = dt.sid
+    -- order by uid & stp so that the distinct selects the correct one
+    -- e.g. first stp in C, N, O P is selected handling overlays/cancellations correctly
+    ORDER BY s.uid, s.stp
 	), servicesout AS (
+    -- the final schedule list with all required data
 	  SELECT
 		  id.encode(s.id, 'radix.62') AS sid,
 		  s.uid, s.startDate, s.stp,
@@ -41,8 +47,12 @@ RETURNS JSON AS $$
 		  INNER JOIN timetable.destination( s.id ) dt ON s.id = dt.sid
       INNER JOIN timetable.schedule_json sj ON s.id=sj.id
     WHERE s.id IN (SELECT s1.sid from services s1 )
+      -- Don't allow cancellations in the output as no need to know
+      AND s.stp != 'C'
+    -- order by time allowing for midnight being in the range
 		ORDER BY st.time >= '01:00', st.time, s.id
   ), tpls AS (
+    -- View of all origin/destination tiplocs in the output
     SELECT DISTINCT
         t.*
       FROM timetable.tiploc t
