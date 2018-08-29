@@ -70,9 +70,6 @@ BEGIN
 
     -- Remove tiplocs
     DELETE FROM timetable.tiploc;
-
-    -- Reset sequences
-    ALTER SEQUENCE timetable.schedule_id_seq RESTART;
   END IF;
 
   RETURN TRUE;
