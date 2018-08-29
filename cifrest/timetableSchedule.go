@@ -4,6 +4,7 @@ import (
   "github.com/peter-mount/golib/rest"
   "log"
   "strings"
+  "time"
 )
 
 // TimetableScheduleHandler implements a REST endpoint which returns the
@@ -11,10 +12,25 @@ import (
 func (c *CIFRest) TimetableScheduleHandler( r *rest.Rest ) error {
   id := r.Var( "id" )
 
-  row := c.dbService.QueryRow( "SELECT timetable.timetableSchedule( $1 ) AS json", id )
+  date := r.Var( "date" )
+  loc, err := time.LoadLocation( "Europe/London" )
+  if err != nil {
+    r.Status( 500 )
+    log.Printf( "500:LoadLocation:%s", err )
+    return err
+  }
+
+  ts, err := time.ParseInLocation( "2006-01-02", date, loc )
+  if err != nil {
+    r.Status( 500 )
+    log.Printf( "500:ParseInLocation:%s", err )
+    return err
+  }
+
+  row := c.dbService.QueryRow( "SELECT timetable.timetableSchedule( $1, $2 ) AS json", id, ts )
 
   var tt []uint8
-  err := row.Scan( &tt )
+  err = row.Scan( &tt )
   if err != nil {
     r.Status( 500 )
     log.Printf( "500:id:%s:%s", id, err )

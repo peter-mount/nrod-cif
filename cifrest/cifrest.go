@@ -43,8 +43,9 @@ func (a *CIFRest) PostInit() error {
   a.restService.Handle( "/schedule/{uid}/{date}/{stp}", a.ScheduleHandler ).Methods( "GET" )
   a.restService.Handle( "/schedule/{uid}", a.ScheduleUIDHandler ).Methods( "GET" )
 
-  a.restService.Handle( "/timetable/{crs}/{date}", a.TimetableHandler ).Methods( "GET" )
-  a.restService.Handle( "/timetable/{id}", a.TimetableScheduleHandler ).Methods( "GET" )
+  a.restService.Handle( "/timetable/schedule/{id}/{date}", a.TimetableScheduleHandler ).Methods( "GET" )
+
+  a.restService.Handle( "/timetable/schedules/{crs}/{date}", a.TimetableHandler ).Methods( "GET" )
 
   return nil
 }
