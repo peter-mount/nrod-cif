@@ -54,5 +54,8 @@ RUN CGO_ENABLED=0 \
 
 # ============================================================
 # This is the final image
-FROM area51/scratch-base:latest
+FROM alpine
+RUN apk add --no-cache \
+      curl \
+      tzdata
 COPY --from=compiler /dest/ /
