@@ -1,4 +1,37 @@
 -- ======================================================================
+-- Generates the unique scheduleId
+-- ======================================================================
+CREATE OR REPLACE FUNCTION timetable.scheduleid( puid TEXT, psd DATE, pstp CHAR )
+RETURNS BIGINT AS $$
+DECLARE
+  v BIGINT;
+  a INTEGER;
+  l CHAR;
+BEGIN
+  -- Start date first
+  v = (FLOOR(EXTRACT(EPOCH FROM psd)/86400) - id.meta_bigint('dateEpoch'))::BIGINT;
+
+  -- Encode UID
+  FOR l IN SELECT regexp_split_to_table( puid, '' )
+  LOOP
+    a = ASCII(l);
+    v = (v<<6) +
+    CASE
+    WHEN a BETWEEN 48 AND 57 THEN a-48
+    WHEN a BETWEEN 65 AND 90 THEN a-55
+    WHEN a BETWEEN 97 AND 122 THEN a-61
+    ELSE 0
+    END;
+  END LOOP;
+
+  -- Encode STP
+  v = (v<<5) + (ASCII(pstp)-65);
+
+  RETURN v;
+END;
+$$ LANGUAGE PLPGSQL;
+
+-- ======================================================================
 -- Return a bitmask for the day of week a service is running on
 --
 -- In CIF the dow is a 7 bit mask, Monday being first entry & Sunday last

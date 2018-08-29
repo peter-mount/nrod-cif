@@ -70,6 +70,11 @@ INSERT INTO id.meta (name,bval,descr)
     VALUES ( 'epoch', 1492501747000, 'Epoch (milliseconds) for base of generated ID''s' )
     ON CONFLICT DO NOTHING;
 
+-- The date epoch, used by some date calcs for smaller id's, = 2017-04-18
+INSERT INTO id.meta (name,bval,descr)
+    VALUES ( 'dateEpoch', FLOOR(EXTRACT(EPOCH FROM '2017-04-18'::date)/86400), 'Epoch (days) for base of generated ID''s' )
+    ON CONFLICT DO NOTHING;
+
 -- Alternate to when this file was inserted.
 --INSERT INTO id.meta (name,bval)
 --    VALUES ( 'epoch', FLOOR(EXTRACT(EPOCH FROM clock_timestamp()) * 1000) )

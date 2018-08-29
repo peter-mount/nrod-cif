@@ -67,7 +67,7 @@ CREATE UNIQUE INDEX tiploc_cluster
 
 -- schedule contains the searchable details of a schedule
 CREATE TABLE timetable.schedule (
-  id          SERIAL NOT NULL,
+  id          BIGINT NOT NULL,
   -- Primary key for all schedules
   uid         CHAR(6) NOT NULL,
   stp         CHAR NOT NULL,

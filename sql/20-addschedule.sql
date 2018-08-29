@@ -20,9 +20,12 @@ BEGIN
   edt := (pSched->'runs'->>'runsTo')::DATE;
   vdow := (pSched->'runs'->>'daysRun')::BIT(7)::INTEGER::SMALLINT;
 
+  vsid := timetable.scheduleid( pSched->'id'->>'uid', sdt, vstp );
+
   INSERT INTO timetable.schedule
-    ( uid, stp, startdate, enddate, dow, entrydate )
+    ( id, uid, stp, startdate, enddate, dow, entrydate )
     VALUES (
+      vsid,
       pSched->'id'->>'uid',
       pSched->'id'->>'stp',
       sdt,
@@ -33,8 +36,7 @@ BEGIN
     ON CONFLICT ( uid, stp, startdate )
     DO UPDATE
       SET enddate = EXCLUDED.enddate,
-          entrydate = EXCLUDED.entrydate
-    RETURNING id INTO vsid;
+          entrydate = EXCLUDED.entrydate;
 
   INSERT INTO timetable.schedule_json
     ( id, schedule )
