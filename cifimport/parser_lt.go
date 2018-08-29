@@ -7,7 +7,7 @@ import (
 func (c *CIFImporter) parseLT( l string ) error {
   s := c.curSchedule
 
-  var loc *cif.Location = &cif.Location{}
+  var loc *cif.Location = &cif.Location{Type:"LT"}
   i := 0
   i = parseString( l, i, 2, &loc.Id )
 

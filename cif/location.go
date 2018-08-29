@@ -56,6 +56,8 @@ type Location struct {
   EngAllow    string        `json:"engAllow,omitempty" xml:"engAllow,attr,omitempty"`
   PathAllow   string        `json:"pathAllow,omitempty" xml:"pathAllow,attr,omitempty"`
   PerfAllow   string        `json:"perfAllow,omitempty" xml:"perfAllow,attr,omitempty"`
+  // The type of entry, one of LO, LI or LT
+  Type        string        `json:"type,omitempty" xml:"type,attr,omitempty"`
 }
 
 func (s *Schedule) AppendLocation(l *Location) {
