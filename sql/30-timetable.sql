@@ -56,7 +56,7 @@ RETURNS JSON AS $$
     SELECT DISTINCT
         t.*
       FROM timetable.tiploc t
-        INNER JOIN servicesout s ON s.origin = t.tiploc OR s.destination = t.tiploc
+        INNER JOIN servicesout s ON s.origin = t.tiploc OR s.destination = t.tiploc OR pcrs = t.crs
       ORDER BY t.tiploc
   ), date1 AS (
     SELECT
