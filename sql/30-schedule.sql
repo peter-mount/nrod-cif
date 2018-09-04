@@ -61,7 +61,11 @@ RETURNS JSON AS $$
   ), tpls AS (
     -- View of all origin/destination tiplocs in the output
     SELECT DISTINCT
-        t.*
+        t.tiploc,
+        t.crs,
+        t.stanox,
+        t.name,
+        t.station
       FROM timetable.tiploc t
         INNER JOIN locations l ON t.tiploc = l.tpl
       ORDER BY t.tiploc
