@@ -25,7 +25,11 @@ RUN go get -v github.com/kevinburke/go-bindata &&\
 ADD scripts/ /usr/local/bin/
 
 # Ensure we have the libraries - docker will cache these between builds
-RUN get.sh
+RUN go get -v \
+      github.com/lib/pq \
+      github.com/peter-mount/golib/... \
+      github.com/peter-mount/nre-feeds/util \
+      github.com/peter-mount/sortfold
 
 # ============================================================
 # source container contains the source as it exists within the
@@ -46,11 +50,21 @@ ARG goarch
 ARG goarm
 
 # NB: CGO_ENABLED=0 forces a static build
-RUN CGO_ENABLED=0 \
-    GOOS=${goos} \
-    GOARCH=${goarch} \
-    GOARM=${goarm} \
-    compile.sh /dest
+RUN for bin in \
+      cifimport \
+      cifrest \
+      cifretrieve;\
+    do\
+      echo "Building ${bin}";\
+      CGO_ENABLED=0 \
+          GOOS=${goos} \
+          GOARCH=${goarch} \
+          GOARM=${goarm} \
+          OUT= \
+      go build \
+        -o /dest/bin/${bin} \
+        github.com/peter-mount/nrod-cif/${bin}/bin;\
+    done
 
 # ============================================================
 # This is the final image
