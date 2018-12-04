@@ -21,9 +21,6 @@ RUN apk add --no-cache \
 RUN go get -v github.com/kevinburke/go-bindata &&\
     go build -o /usr/local/bin/go-bindata github.com/kevinburke/go-bindata/go-bindata
 
-# Our build scripts
-ADD scripts/ /usr/local/bin/
-
 # Ensure we have the libraries - docker will cache these between builds
 RUN go get -v \
       github.com/lib/pq \
