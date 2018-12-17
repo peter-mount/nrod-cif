@@ -3,7 +3,6 @@ package cifimport
 import (
   "database/sql"
   "errors"
-  //bolt "github.com/coreos/bbolt"
   "bufio"
   "io"
   "log"
