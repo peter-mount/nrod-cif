@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-  err := kernel.Launch( &cifretrieve.CIFRetriever{} )
+  err := kernel.Launch(&cifretrieve.CIFRetriever{})
   if err != nil {
-    log.Fatal( err )
+    log.Fatal(err)
   }
 }

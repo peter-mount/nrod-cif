@@ -6,8 +6,8 @@ import (
 
 // cleanup removes expired entries from the database
 func (c *CIFImporter) cleanup() error {
-  log.Println( "Removing historic associations" )
-  res, err := c.db.Exec( "DELETE FROM timetable.assoc WHERE enddate < NOW()::DATE" )
+  log.Println("Removing historic associations")
+  res, err := c.db.Exec("DELETE FROM timetable.assoc WHERE enddate < NOW()::DATE")
   if err != nil {
     return err
   }
@@ -16,11 +16,11 @@ func (c *CIFImporter) cleanup() error {
     return err
   }
   if rc > 0 {
-    log.Printf( "Removed %d associations", rc )
+    log.Printf("Removed %d associations", rc)
   }
 
-  log.Println( "Removing historic schedules" )
-  res, err = c.db.Exec( "DELETE FROM timetable.schedule WHERE enddate < NOW()::DATE" )
+  log.Println("Removing historic schedules")
+  res, err = c.db.Exec("DELETE FROM timetable.schedule WHERE enddate < NOW()::DATE")
   if err != nil {
     return err
   }
@@ -29,7 +29,7 @@ func (c *CIFImporter) cleanup() error {
     return err
   }
   if rc > 0 {
-    log.Printf( "Removed %d schedules", rc )
+    log.Printf("Removed %d schedules", rc)
   }
 
   return nil

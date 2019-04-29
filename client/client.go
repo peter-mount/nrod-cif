@@ -17,8 +17,8 @@ type CIFClient struct {
 // v - instance of object to unmarshal
 // returns (true, nil) if found and v contains data
 // (false, nil) if not found or (false, error ) on error
-func (c *CIFClient) get( path string, v interface{} ) ( bool, error ) {
-  if resp, err := http.Get( c.Url + path ); err != nil {
+func (c *CIFClient) get(path string, v interface{}) (bool, error) {
+  if resp, err := http.Get(c.Url + path); err != nil {
     return false, err
   } else {
     defer resp.Body.Close()
@@ -27,10 +27,10 @@ func (c *CIFClient) get( path string, v interface{} ) ( bool, error ) {
       return false, nil
     }
 
-    if body, err := ioutil.ReadAll( resp.Body ); err != nil {
+    if body, err := ioutil.ReadAll(resp.Body); err != nil {
       return false, err
     } else {
-      json.Unmarshal( body, v )
+      json.Unmarshal(body, v)
       return true, nil
     }
   }

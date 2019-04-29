@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-  err := kernel.Launch( &cifrest.CIFRest{} )
+  err := kernel.Launch(&cifrest.CIFRest{})
   if err != nil {
-    log.Fatal( err )
+    log.Fatal(err)
   }
 }

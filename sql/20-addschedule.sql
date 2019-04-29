@@ -1,68 +1,65 @@
 -- ======================================================================
 -- Insert/update a schedule based on it's JSON
 -- ======================================================================
-CREATE OR REPLACE FUNCTION timetable.addschedule( pSched JSON )
-RETURNS BIGINT AS $$
+CREATE OR REPLACE FUNCTION timetable.addschedule(pSched JSON)
+    RETURNS BIGINT AS
+$$
 DECLARE
-  vsid    BIGINT;
-  step    JSON;
-  vord    SMALLINT;
-  vstp    CHAR;
-  sdt     DATE;
-  edt     DATE;
-  vdow    SMALLINT;
+    vsid BIGINT;
+    step JSON;
+    vord SMALLINT;
+    vstp CHAR;
+    sdt  DATE;
+    edt  DATE;
+    vdow SMALLINT;
 BEGIN
-  vstp := pSched->'id'->>'stp';
-  sdt := (pSched->'runs'->>'runsFrom')::DATE;
-  edt := (pSched->'runs'->>'runsTo')::DATE;
-  vdow := (pSched->'runs'->>'daysRun')::BIT(7)::INTEGER::SMALLINT;
+    vstp := pSched -> 'id' ->> 'stp';
+    sdt := (pSched -> 'runs' ->> 'runsFrom')::DATE;
+    edt := (pSched -> 'runs' ->> 'runsTo')::DATE;
+    vdow := (pSched -> 'runs' ->> 'daysRun')::BIT(7)::INTEGER::SMALLINT;
 
-  vsid := timetable.scheduleid( pSched->'id'->>'uid', sdt, vstp );
+    vsid := timetable.scheduleid(pSched -> 'id' ->> 'uid', sdt, vstp);
 
-  INSERT INTO timetable.schedule
-    ( id, uid, stp, startdate, enddate, dow, entrydate )
-    VALUES (
-      vsid,
-      pSched->'id'->>'uid',
-      pSched->'id'->>'stp',
-      sdt,
-      edt,
-      vdow,
-      NOW()
-    )
+    INSERT INTO timetable.schedule
+        (id, uid, stp, startdate, enddate, dow, entrydate)
+    VALUES (vsid,
+            pSched -> 'id' ->> 'uid',
+            pSched -> 'id' ->> 'stp',
+            sdt,
+            edt,
+            vdow,
+            NOW())
     ON CONFLICT ( uid, stp, startdate )
-    DO UPDATE
-      SET enddate = EXCLUDED.enddate,
-          entrydate = EXCLUDED.entrydate;
+        DO UPDATE
+        SET enddate   = EXCLUDED.enddate,
+            entrydate = EXCLUDED.entrydate;
 
-  INSERT INTO timetable.schedule_json
-    ( id, schedule )
-    VALUES ( vsid, pSched )
+    INSERT INTO timetable.schedule_json
+        (id, schedule)
+    VALUES (vsid, pSched)
     ON CONFLICT ( id )
-    DO UPDATE
-      SET schedule = pSched;
+        DO UPDATE
+        SET schedule = pSched;
 
-  -- Now remove & replace the station lookup
-  DELETE FROM timetable.station WHERE sid = vsid;
+    -- Now remove & replace the station lookup
+    DELETE FROM timetable.station WHERE sid = vsid;
 
-  IF pSched->>'schedule' IS NOT NULL THEN
-    vord := 0;
-    FOR step IN SELECT * FROM json_array_elements( pSched->'schedule' )
-    LOOP
-      -- we only index against the public timetable
-      IF step->'time'->>'pta' IS NOT NULL OR step->'time'->>'ptd' IS NOT NULL THEN
-        INSERT INTO timetable.station
-          ( sid, ord, tid, stp, startdate, enddate, dow, time )
-          VALUES (
-            vsid, vord, timetable.gettiplocid( step->> 'tpl' ), vstp,
-            sdt, edt, vdow,
-            (step->'time'->>'time')::TIME
-          );
-      END IF;
-      vord := vord + 1;
-    END LOOP;
-  END IF;
+    IF pSched ->> 'schedule' IS NOT NULL THEN
+        vord := 0;
+        FOR step IN SELECT * FROM json_array_elements(pSched -> 'schedule')
+            LOOP
+                -- we only index against the public timetable
+                IF step -> 'time' ->> 'pta' IS NOT NULL OR step -> 'time' ->> 'ptd' IS NOT NULL THEN
+                    INSERT INTO timetable.station
+                        (sid, ord, tid, stp, startdate, enddate, dow, time)
+                    VALUES (vsid, vord, timetable.gettiplocid(step ->> 'tpl'), vstp,
+                            sdt, edt, vdow,
+                            (step -> 'time' ->> 'time')::TIME);
+                END IF;
+                vord := vord + 1;
+            END LOOP;
+    END IF;
 
-  RETURN vsid;
+    RETURN vsid;
 END;
 $$ LANGUAGE PLPGSQL;

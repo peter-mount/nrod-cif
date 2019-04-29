@@ -13,23 +13,23 @@ import (
 // router.HandleFunc( "/tiploc/{id}", db.TiplocHandler ).Methods( "GET" )
 //
 // where db is a pointer to an active CIF struct. When running this would allow GET requests like /tiploc/MSTONEE to return JSON representing that station.
-func (c *CIFRest) TiplocHandler( r *rest.Rest ) error {
-  tpl := r.Var( "id" )
+func (c *CIFRest) TiplocHandler(r *rest.Rest) error {
+  tpl := r.Var("id")
 
-  tiploc, err := c.cif.GetTiploc( tpl )
+  tiploc, err := c.cif.GetTiploc(tpl)
 
   if tiploc == nil {
-    r.Status( 404 )
+    r.Status(404)
     return nil
   }
 
   if err != nil {
-    r.Status( 500 )
-    log.Printf( "500: tiploc %s = %s", tpl, err )
+    r.Status(500)
+    log.Printf("500: tiploc %s = %s", tpl, err)
     return err
   }
 
-  tiploc.Self = r.Self( "/tiploc/" + tpl )
-  r.Status( 200 ).Value( tiploc )
+  tiploc.Self = r.Self("/tiploc/" + tpl)
+  r.Status(200).Value(tiploc)
   return nil
 }

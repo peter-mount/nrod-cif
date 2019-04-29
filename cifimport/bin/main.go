@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-  err := kernel.Launch( &kernel.MemUsage{}, &cifimport.CIFImporter{} )
+  err := kernel.Launch(&kernel.MemUsage{}, &cifimport.CIFImporter{})
   if err != nil {
-    log.Fatal( err )
+    log.Fatal(err)
   }
 }

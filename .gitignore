@@ -17,3 +17,6 @@ config.yaml
 docs
 Dockerfile.*
 run.sh
+
+# Ignore built sqlassets.go
+cifimport/sqlassets.go
