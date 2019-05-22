@@ -12,7 +12,7 @@ func (c *CIFImporter) parseTI(l string) error {
   i += 2
   i = parseInt(l, i, 6, &t.NLC)
   i = parseString(l, i, 1, &t.NLCCheck)
-  i = parseStringTitle(l, i, 26, &t.Desc)
+  i = parseStringTitle(l, i, 26, &t.Name)
   i = parseInt(l, i, 5, &t.Stanox)
   i += 4
   i = parseStringTrim(l, i, 3, &t.CRS)
@@ -45,7 +45,7 @@ func (c *CIFImporter) putTiploc(t *cif.Tiploc) error {
     t.Tiploc,
     t.CRS,
     t.Stanox,
-    t.Desc,
+    t.Name,
     t.NLC,
     t.NLCCheck,
     t.NLCDesc,

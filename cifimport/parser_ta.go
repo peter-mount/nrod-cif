@@ -11,7 +11,7 @@ func (c *CIFImporter) parseTA(l string) error {
   i += 2
   i = parseInt(l, i, 6, &t.NLC)
   i = parseStringTrim(l, i, 1, &t.NLCCheck)
-  i = parseStringTrim(l, i, 26, &t.Desc)
+  i = parseStringTrim(l, i, 26, &t.Name)
   i = parseInt(l, i, 5, &t.Stanox)
   i += 4
   i = parseStringTrim(l, i, 3, &t.CRS)

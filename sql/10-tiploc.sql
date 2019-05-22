@@ -50,3 +50,37 @@ CREATE TRIGGER settiploc
     ON timetable.tiploc
     FOR EACH ROW
 EXECUTE PROCEDURE timetable.settiplocid();
+
+-- ======================================================================
+-- Fixes tiplocs so that those entries with no crs but the same stanox
+-- get the valid crs code. This then allows us to ask for a timetable at
+-- a crs and get all services.
+--
+-- For example VIC is VICTRIA but in the timetable they use either
+-- VICTRIC or VICTRIE, VICTRIA has no services.
+--
+-- London Bridge is another example of this.
+--
+-- A valid crs code is one that does not start with X or Z
+-- ======================================================================
+create or replace function timetable.fixtiploccrs()
+    returns void
+as
+$$
+declare
+    rec record;
+begin
+    for rec in select stanox, crs
+               from timetable.tiploc
+               where stanox > 0
+                 and crs != ''
+                 and substr(crs, 1, 1) not in ('X', 'Z')
+        loop
+            update timetable.tiploc
+            set crs = rec.crs
+            where crs = ''
+              and stanox = rec.stanox;
+        end loop;
+end;
+$$
+    language plpgsql;

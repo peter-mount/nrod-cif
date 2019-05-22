@@ -32,5 +32,11 @@ func (c *CIFImporter) cleanup() error {
     log.Printf("Removed %d schedules", rc)
   }
 
+  log.Println("Fixing tiploc crs codes")
+  _, err = c.db.Exec("SELECT timetable.fixtiploccrs()")
+  if err != nil {
+    return err
+  }
+
   return nil
 }
