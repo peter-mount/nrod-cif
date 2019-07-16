@@ -54,7 +54,6 @@ WORKDIR /work
 # NB: CGO_ENABLED=0 forces a static build
 RUN for bin in \
       cifimport \
-      cifrest \
       cifretrieve;\
     do\
       echo "Building ${bin}";\
