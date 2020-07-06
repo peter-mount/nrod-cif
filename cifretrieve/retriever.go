@@ -52,6 +52,11 @@ func (a *CIFRetriever) PostInit() error {
 
   defaultParam(a.username, "NRODUSER")
   defaultParam(a.password, "NRODPASS")
+
+  // _USR & _PSW forms used by Jenkins credentials in pipelines
+  defaultParam(a.username, "NROD_USR")
+  defaultParam(a.password, "NROD_PSW")
+
   if *a.username == "" || *a.password == "" {
     return fmt.Errorf("NROD Username/Password required")
   }
