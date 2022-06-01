@@ -1,7 +1,10 @@
 module github.com/peter-mount/nrod-cif
 
+go 1.17
+
 require (
-	github.com/akutz/sortfold v0.2.1 // indirect
-	github.com/peter-mount/golib v0.0.0-20181214134500-eb1182399956
-	github.com/peter-mount/nre-feeds v0.0.0-20181217143815-ab14fee073e5
+	github.com/peter-mount/go-kernel v1.2.0
+	github.com/peter-mount/nre-feeds v0.0.0-20210921181008-fc57a81d92a6
+	gopkg.in/yaml.v2 v2.4.0
+	github.com/lib/pq v1.2.0
 )

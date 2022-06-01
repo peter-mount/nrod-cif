@@ -18,8 +18,8 @@ RUN apk add --no-cache \
       tzdata
 
 # go-bindata
-RUN go get -v github.com/kevinburke/go-bindata &&\
-    go build -o /usr/local/bin/go-bindata github.com/kevinburke/go-bindata/go-bindata
+#RUN go get -v github.com/kevinburke/go-bindata &&\
+#    go build -o /usr/local/bin/go-bindata github.com/kevinburke/go-bindata/go-bindata
 
 # Ensure we have the libraries - docker will cache these between builds
 WORKDIR /work
@@ -40,7 +40,7 @@ WORKDIR /work
 ADD . .
 
 # Import sql so we can build as needed
-RUN go-bindata -o cifimport/sqlassets.go -pkg cifimport sql/
+#RUN go-bindata -o cifimport/sqlassets.go -pkg cifimport sql/
 
 # ============================================================
 # Compile the source.
