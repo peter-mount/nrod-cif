@@ -2,34 +2,30 @@ package cifimport
 
 import (
 	"bufio"
-	"compress/gzip"
 	"database/sql"
 	"flag"
 	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/peter-mount/go-kernel/db"
+	"github.com/peter-mount/go-kernel/util/task"
 	"github.com/peter-mount/nrod-cif/cif"
 	_ "gopkg.in/yaml.v2"
-	"io"
-	"log"
 	"os"
 )
 
 type CIFImporter struct {
-	files     []string
-	dbService *db.DBService `kernel:"inject"`
-	db        *sql.DB
-	//sql       *sqlutils.SchemaImport
+	dbService   *db.DBService `kernel:"inject"`
+	db          *sql.DB
 	header      *HD     // Last import HD record
 	importhd    *HD     // Current import HD record
 	tx          *sql.Tx // === Entries used during import only
 	curSchedule *cif.Schedule
 	update      bool
-	// Maintenance Mode
-	maintenance *bool   `kernel:"flag,m,Same as -expire -vacuum"`
-	forceExpire *bool   `kernel:"flag,expire,Remove expired entries"`
-	forceVacuum *bool   `kernel:"flag,vacuum,Vacuum and re-cluster database"`
-	fileSource  *string `kernel:"flag,files,files containing cif files to import"`
+	worker      task.Queue `kernel:"worker"`
+	maintenance *bool      `kernel:"flag,m,Same as -expire -vacuum"`
+	forceExpire *bool      `kernel:"flag,expire,Remove expired entries"`
+	forceVacuum *bool      `kernel:"flag,vacuum,Vacuum and re-cluster database"`
+	fileSource  *string    `kernel:"flag,files,files containing cif files to import"`
 }
 
 func (a *CIFImporter) Name() string {
@@ -42,13 +38,12 @@ func (a *CIFImporter) PostInit() error {
 	if err != nil {
 		return err
 	}
-	a.files = files
 
 	if *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) {
-		if len(a.files) > 0 {
+		if len(files) > 0 {
 			return fmt.Errorf("CIF files not permitted in maintenance mode")
 		}
-	} else if len(a.files) == 0 {
+	} else if len(files) == 0 {
 		return fmt.Errorf("CIF files required")
 	}
 
@@ -79,94 +74,39 @@ func (a *CIFImporter) addCIFFilesForImport() ([]string, error) {
 }
 
 func (a *CIFImporter) Start() error {
+
+	files, err := a.addCIFFilesForImport()
+	if err != nil {
+		return err
+	}
+
 	a.db = a.dbService.GetDB()
 	if a.db == nil {
 		return fmt.Errorf("No database")
 	}
-	return nil
-}
-
-func (a *CIFImporter) Run() error {
-
-	fileCount := 0
 
 	// Normal mode, cleanup & import CIF files
 	if !(*(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum)) {
 		// Do a cleanup first as it will remove expired entries freeing up some space
-		err := a.cleanup()
-		if err != nil {
-			return err
-		}
+		a.worker.AddPriorityTask(899, a.cleanup)
 
-		for _, file := range a.files {
-
-			log.Printf("Parsing %s", file)
-
-			f, err := os.Open(file)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			// gzip or plain
-			var header [2]byte
-			c, err := io.ReadFull(f, header[:])
-			if err != nil {
-				return err
-			}
-			if c < 2 {
-				return fmt.Errorf("")
-			}
-			_, err = f.Seek(0, io.SeekStart)
-			if err != nil {
-				return err
-			}
-			reader := io.Reader(f)
-			if header[0] == 0x1f && header[1] == 0x8b {
-				reader, err = gzip.NewReader(f)
-				if err != nil {
-					return err
-				}
-			}
-
-			skip, err := a.importCIF(reader)
-			if err != nil {
-				if skip {
-					// Non fatal error so log it but don't kill the import
-					log.Println(err)
-				} else {
-					return err
-				}
-			} else {
-				fileCount++
-			}
+		for idx, file := range files {
+			a.worker.AddPriorityTask(900+idx, task.Of(a.importCIFTask).WithValue("file", file))
 		}
 	}
 
 	// Do maintenance if in maintenance mode or we imported at least 1 CIF file
-	if *(a.maintenance) || *(a.forceExpire) || fileCount > 0 {
-		err := a.cleanup()
-		if err != nil {
-			return err
-		}
+	maintenance := len(files) > 0 || *(a.maintenance)
+	if maintenance || *(a.forceExpire) {
+		a.worker.AddPriorityTask(1001, a.cleanup)
 	}
 
-	if *(a.maintenance) || *(a.forceVacuum) || fileCount > 0 {
-		err := a.vacuum()
-		if err != nil {
-			return err
-		}
-
-		err = a.cluster()
-		if err != nil {
-			return err
-		}
+	if maintenance || *(a.forceVacuum) {
+		a.worker.AddPriorityTask(1001, a.vacuum)
 	}
 
-	if *(a.maintenance) || *(a.forceExpire) || *(a.forceVacuum) {
-		log.Println("Maintenance complete")
-	} else {
-		log.Println("Import complete")
+	if maintenance || *(a.forceExpire) || *(a.forceVacuum) {
+		a.worker.AddPriorityTask(1001, a.cluster)
 	}
 
 	return nil
