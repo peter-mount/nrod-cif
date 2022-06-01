@@ -36,29 +36,6 @@ func (a *CIFImporter) Name() string {
 	return "CIFImporter"
 }
 
-/*
-func (a *CIFImporter) Init(k *kernel.Kernel) error {
-  a.maintenance = flag.Bool("m", false, "Same as -expire -vacuum")
-  a.forceExpire = flag.Bool("expire", false, "Remove expired entries")
-  a.forceVacuum = flag.Bool("vacuum", false, "Vacuum & recluster the database")
-  a.fileSource = flag.String("files", "", "File containing cif files to import")
-
-  dbservice, err := k.AddService(&db.DBService{})
-  if err != nil {
-    return err
-  }
-  a.dbService = (dbservice).(*db.DBService)
-
-  sqlservice, err := k.AddService(sqlutils.NewSchemaImport("timetable", AssetString, AssetNames))
-  if err != nil {
-    return err
-  }
-  a.sql = (sqlservice).(*sqlutils.SchemaImport)
-
-  return nil
-}
-*/
-
 func (a *CIFImporter) PostInit() error {
 
 	files, err := a.addCIFFilesForImport()
@@ -90,7 +67,7 @@ func (a *CIFImporter) addCIFFilesForImport() ([]string, error) {
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			files = append(a.files, scanner.Text())
+			files = append(files, scanner.Text())
 		}
 		err = scanner.Err()
 		if err != nil {

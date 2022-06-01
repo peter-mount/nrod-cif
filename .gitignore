@@ -20,3 +20,5 @@ run.sh
 
 # Ignore built sqlassets.go
 cifimport/sqlassets.go
+/retrieve.sh
+/import.sh
