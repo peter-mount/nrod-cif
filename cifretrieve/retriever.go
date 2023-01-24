@@ -16,10 +16,6 @@ type CIFRetriever struct {
 	files []*cif
 }
 
-func (a *CIFRetriever) Name() string {
-	return "CIFRetriever"
-}
-
 // If *param is "" then use environment variable value
 func defaultParam(param *string, envName string) {
 	if *param == "" {

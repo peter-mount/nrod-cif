@@ -15,21 +15,17 @@ import (
 
 type CIFImporter struct {
 	dbService   *db.DBService `kernel:"inject"`
+	worker      task.Queue    `kernel:"worker"`
+	maintenance *bool         `kernel:"flag,m,Same as -expire -vacuum"`
+	forceExpire *bool         `kernel:"flag,expire,Remove expired entries"`
+	forceVacuum *bool         `kernel:"flag,vacuum,Vacuum and re-cluster database"`
+	fileSource  *string       `kernel:"flag,files,files containing cif files to import"`
 	db          *sql.DB
 	header      *HD     // Last import HD record
 	importhd    *HD     // Current import HD record
 	tx          *sql.Tx // === Entries used during import only
 	curSchedule *cif.Schedule
 	update      bool
-	worker      task.Queue `kernel:"worker"`
-	maintenance *bool      `kernel:"flag,m,Same as -expire -vacuum"`
-	forceExpire *bool      `kernel:"flag,expire,Remove expired entries"`
-	forceVacuum *bool      `kernel:"flag,vacuum,Vacuum and re-cluster database"`
-	fileSource  *string    `kernel:"flag,files,files containing cif files to import"`
-}
-
-func (a *CIFImporter) Name() string {
-	return "CIFImporter"
 }
 
 func (a *CIFImporter) PostInit() error {
