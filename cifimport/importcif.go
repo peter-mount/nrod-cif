@@ -4,8 +4,8 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"github.com/peter-mount/go-kernel/v2/log"
 	"io"
-	"log"
 	"os"
 )
 

@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"github.com/peter-mount/go-kernel/v2"
 	"github.com/peter-mount/nrod-cif/cifretrieve"
-	"log"
+	"os"
 )
 
 func main() {
 	err := kernel.Launch(&cifretrieve.CIFRetriever{})
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

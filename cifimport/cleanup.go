@@ -2,7 +2,7 @@ package cifimport
 
 import (
 	"context"
-	"log"
+	"github.com/peter-mount/go-kernel/v2/log"
 )
 
 // cleanup removes expired entries from the database

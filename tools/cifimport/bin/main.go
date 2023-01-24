@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"github.com/peter-mount/go-kernel/v2"
 	"github.com/peter-mount/nrod-cif/cifimport"
-	"log"
+	"os"
 )
 
 func main() {
 	err := kernel.Launch(&kernel.MemUsage{}, &cifimport.CIFImporter{})
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
