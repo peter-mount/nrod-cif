@@ -2,6 +2,8 @@ package cifretrieve
 
 import (
 	"fmt"
+	"github.com/peter-mount/go-kernel/v2/log"
+	common "github.com/peter-mount/nrod-cif"
 	"os"
 )
 
@@ -43,6 +45,7 @@ func (a *CIFRetriever) PostInit() error {
 }
 
 func (a *CIFRetriever) Start() error {
+	log.Println(common.Version)
 
 	if *a.getFull {
 		if err := a.retrieveFull(); err != nil {

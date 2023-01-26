@@ -7,7 +7,9 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/peter-mount/go-kernel/v2/db"
+	"github.com/peter-mount/go-kernel/v2/log"
 	"github.com/peter-mount/go-kernel/v2/util/task"
+	common "github.com/peter-mount/nrod-cif"
 	"github.com/peter-mount/nrod-cif/cif"
 	_ "gopkg.in/yaml.v2"
 	"os"
@@ -70,6 +72,7 @@ func (a *CIFImporter) addCIFFilesForImport() ([]string, error) {
 }
 
 func (a *CIFImporter) Start() error {
+	log.Println(common.Version)
 
 	files, err := a.addCIFFilesForImport()
 	if err != nil {
