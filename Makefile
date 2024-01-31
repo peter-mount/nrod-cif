@@ -43,10 +43,10 @@ go-bindata:
 clean: init
 	@${MAKE} --no-print-directory -f Makefile.gen clean
 
-test: init
+test: cifimport/sqlassets.go init
 	@${MAKE} --no-print-directory -f Makefile.gen test
 
-build: cifimport/sqlassets.go test
+build: test
 	@${MAKE} --no-print-directory -f Makefile.gen all
 
 cifimport/sqlassets.go: go-bindata
