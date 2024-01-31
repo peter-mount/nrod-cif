@@ -125,18 +125,6 @@ node("go") {
   stage("openbsd_arm64") {
     sh 'make -f Makefile.gen openbsd_arm64'
   }
-  stage("plan9_386") {
-    sh 'make -f Makefile.gen plan9_386'
-  }
-  stage("plan9_amd64") {
-    sh 'make -f Makefile.gen plan9_amd64'
-  }
-  stage("plan9_arm6") {
-    sh 'make -f Makefile.gen plan9_arm6'
-  }
-  stage("plan9_arm7") {
-    sh 'make -f Makefile.gen plan9_arm7'
-  }
   stage("solaris_amd64") {
     sh 'make -f Makefile.gen solaris_amd64'
   }

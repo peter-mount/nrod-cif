@@ -32,7 +32,7 @@ init:
 	@echo "GO MOD   download";go mod download
 	@echo "GENERATE build";\
 	CGO_ENABLED=0 go build -o build tools/build/bin/main.go
-	@./build -build Makefile.gen -build-platform "$(PLATFORMS)" -d builds -dist dist -build-archiveArtifacts "dist/*"
+	@./build -build Makefile.gen -build-platform "$(PLATFORMS)" -d builds -dist dist -build-archiveArtifacts "dist/*" -block blocklist.yaml
 
 go-bindata:
 	@if [ ! -f go-bindata ]; then echo "CURL     go-bindata";\

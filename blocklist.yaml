@@ -1,0 +1,4 @@
+block:
+  # postgresql unsupported
+  # fails due to undefined syscall.Stat_t
+  - os: plan9
