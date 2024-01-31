@@ -34,14 +34,23 @@ init:
 	CGO_ENABLED=0 go build -o build tools/build/bin/main.go
 	@./build -build Makefile.gen -build-platform "$(PLATFORMS)" -d builds -dist dist -build-archiveArtifacts "dist/*"
 
+go-bindata:
+	@if [ ! -f go-bindata ]; then echo "CURL     go-bindata";\
+	curl --silent --location --output go-bindata https://github.com/kevinburke/go-bindata/releases/download/v3.25.0/go-bindata-linux-amd64;\
+	chmod 755 go-bindata;\
+	fi
+
 clean: init
 	@${MAKE} --no-print-directory -f Makefile.gen clean
 
 test: init
 	@${MAKE} --no-print-directory -f Makefile.gen test
 
-build: test
+build: cifimport/sqlassets.go test
 	@${MAKE} --no-print-directory -f Makefile.gen all
+
+cifimport/sqlassets.go: go-bindata
+	@echo "GO GENERATE sqlassets";./go-bindata -o tools/cifimport/sqlassets.go -pkg cifimport sql/
 
 docs: init
 	@${MAKE} --no-print-directory -f Makefile.gen docs
