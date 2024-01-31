@@ -20,3 +20,8 @@ run.sh
 
 # Ignore built sqlassets.go
 cifimport/sqlassets.go
+
+/build
+/builds/
+/dist/
+/Makefile.gen
